@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "sidebar.html" %}
+
+<div class="column is-align-self-baseline">
+    <!-- Head -->
+    <div class="block">
+        <p class="title">
+            <span class="icon">
+              <i class="fas fa-running"></i>
+            </span>
+            &nbsp
+            <span>{{_("Personal Status")}}</span>
+        </p>     
+    </div>
+
+    <!-- Content -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <hr>
+    <div class="notification is-danger">
+        {{ messages[0] }}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Personal data -->    
+    <div class="block">         
+        <div class="box">
+            <p class="is-size-5">
+                {{_("Personal data")}}
+            </p>    
+            <table class="table is-fullwidth has-text-left">     
+                <tbody>
+                    <tr>
+                        <th>{{_("Prename")}}</th>
+                        <td>{{user.prename}}</td>         
+                    </tr>
+                    <tr>
+                        <th>{{_("Surname")}}</th>
+                        <td>{{user.surname}}</td>         
+                    </tr>
+                    <tr>
+                        <th>{{_("Username")}}</th>
+                        <td>{{user.prename}}</td>         
+                    </tr>   
+                    <tr>
+                        <th>{{_("Email")}}</th>
+                        <td>{{user.email}}</td>         
+                    </tr>   
+                </tbody>
+            </table>
+            {% if user.is_teacher %}
+                <span class="tag is-link">
+                    {{_("Teacher")}}
+                </span>
+            {% else %}
+                <span class="tag is-info">
+                    {{_("Student")}}
+                </span>
+            {% endif %}
+            {% if user.is_admin %}
+                <span class="tag is-danger">
+                    {{_("Administrator")}}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
