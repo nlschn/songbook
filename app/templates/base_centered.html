@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CMS</title>
+    <title>Songbook</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css" />    
     <link rel="stylesheet" href="https://bulma-divider.netlify.app//css/bulma-divider.min.css" />
     <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/all.js"></script>
@@ -19,40 +19,40 @@
                     <div id="navbarMenuHeroA" class="navbar-menu">
                         <div class="navbar-end">
                             <a href="{{ url_for('main.index') }}" class="navbar-item">
-                                {{_("Home")}}
+                                Home
                             </a>
                             {% if current_user.is_authenticated %}
-                            <a href="{{ url_for('main.profile') }}" class="navbar-item">
-                                {{_("Personal Status")}}
-                            </a>
+                                <a href="{{ url_for('main.profile') }}" class="navbar-item">
+                                    Profile
+                                </a>
                             {% endif %}
                             {% if not current_user.is_authenticated %}
-                            <a href="{{ url_for('auth.login') }}" class="navbar-item">
-                                {{_("Login")}}
-                            </a>
-                            <a href="{{ url_for('auth.signup') }}" class="navbar-item">
-                                {{_("Sign Up")}}
-                            </a>
+                                <a href="{{ url_for('auth.signin') }}" class="navbar-item">
+                                    Sign In
+                                </a>
+                                <a href="{{ url_for('auth.signup') }}" class="navbar-item">
+                                    Sign Up
+                                </a>
                             {% endif %}
                             {% if current_user.is_authenticated %}
-                            <a href="{{ url_for('auth.logout') }}" class="navbar-item">
-                                {{_("Logout")}}
-                            </a>
+                                <a href="{{ url_for('auth.signout') }}" class="navbar-item">
+                                    Sign Out
+                                </a> 
                             {% endif %}
                         </div>
                     </div>
                 </div>
             </nav>
         </div>
-          
+         
         <div class="hero-body">
             <div class="container has-text-centered">
-                <div class="columns is-vcentered">                        
+                <div class="columns is-vcentered">   
                     {% block content %}
-                    {% endblock %}                       
+                    {% endblock %}
                 </div>                   
             </div>
-        </div>
+        </div> 
           
     </section>
     <footer class="footer">
@@ -61,7 +61,7 @@
             <!-- <strong>Bulma</strong> by <a href="https://jgthms.com">Jeremy Thomas</a>. The source code is licensed
             <a href="http://opensource.org/licenses/mit-license.php">MIT</a>. The website content
             is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>. -->
-            - CMS Test Footer - 
+            - Songbook - 
           </p>
         </div>
       </footer>

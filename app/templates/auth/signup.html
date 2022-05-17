@@ -1,0 +1,54 @@
+{% extends "base_centered.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Sign Up</h3>
+    <div class="box">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                <div class="notification is-danger">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form action="" method="post">
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.username.label }}<br>
+                {{ form.username(class="input") }}<br>
+                {% for error in form.username.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p>
+            <br>
+            <p>
+                {{ form.email.label }}<br>
+                {{ form.email(class="input") }}<br>
+                {% for error in form.email.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p>
+            <br>
+            <p>
+                {{ form.password.label }}<br>
+                {{ form.password(class="input") }}<br>
+                {% for error in form.password.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p>
+            <br>
+            <p>
+                {{ form.password2.label }}<br>
+                {{ form.password2(class="input") }}<br>
+                {% for error in form.password2.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </p
+            <br><br>
+            <p>{{ form.submit(class="button") }}</p>
+        </form>
+    </div>
+</div>
+{% endblock %}

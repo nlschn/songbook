@@ -1,0 +1,44 @@
+{% extends "base_centered.html" %}
+
+{% block content %}
+
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Login</h3>
+    <div class="box">
+        <div class="block">           
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}  
+                    {% for message in messages %}
+                        <div class="notification is-danger">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="" method="post" novalidate>
+                {{ form.hidden_tag() }}                
+                <p>
+                    {{ form.username.label }}<br>
+                    {{ form.username(class="input") }}
+                    {% for error in form.username.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <br>
+                <p>
+                    {{ form.password.label }}<br>
+                    {{ form.password(class="input") }}
+                    {% for error in form.password.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <br>
+                <p>{{ form.remember_me(class="checkbox") }} {{ form.remember_me.label }}</p>
+                <br>
+                <p>{{ form.submit(class="button") }}</p>
+            </form>
+        </div>       
+    </div>
+</div>
+{% endblock %}
