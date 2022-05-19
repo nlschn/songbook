@@ -25,9 +25,3 @@ def index():
 @login_required
 def profile():
     return render_template('main/profile.html', user = current_user, subtitle = current_user.username, view = "overview")
-
-
-@bp.route("/songs")
-@login_required
-def songs():
-    return render_template('main/songs.html', user = current_user, title = "Manage Songs", subtitle = current_user.username, view = "songs")

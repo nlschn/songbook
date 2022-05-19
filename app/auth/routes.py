@@ -46,6 +46,7 @@ def signout():
     logout_user()
     return redirect(url_for('main.index'))
 
+
 @bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     if current_user.is_authenticated:

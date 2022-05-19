@@ -69,15 +69,21 @@
                 <div class="container">
                     <ul>
                         {% if view == "overview" %} 
-                            <li class="is-active"><a>Overview</a></li>
+                            <li class="is-active"><a href="{{ url_for('main.profile') }}">Overview</a></li>
                         {% else %} 
-                            <li><a href="{{ url_for('main.profile') }}"">Overview</a></li> 
+                            <li><a href="{{ url_for('main.profile') }}">Overview</a></li> 
                         {% endif %}
 
-                        {% if view == "songs" %}
-                            <li class="is-active"><a>Songs</a></li>
+                        {% if view == "collection" %}
+                            <li class="is-active"><a href="{{ url_for('songs.collection') }}">Songs</a></li>
                         {% else %}
-                            <li><a href="{{ url_for('main.songs') }}"">Songs</a></li>
+                            <li><a href="{{ url_for('songs.collection') }}">Collection</a></li>
+                        {% endif %}
+
+                        {% if view == "add" %}
+                            <li class="is-active"><a href="{{ url_for('songs.add') }}">New song</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('songs.add') }}">New song</a></li>
                         {% endif %}
                     </ul>
                 </div>

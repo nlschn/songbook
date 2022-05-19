@@ -31,6 +31,9 @@ def create_app(config_class = Config):
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
+    from app.songs import bp as songs_bp
+    app.register_blueprint(songs_bp, url_prefix='/songs')
+
     if not app.debug:
         if app.config['MAIL_SERVER']:
             auth = None

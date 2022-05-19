@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="section">
+        <nav class="level">            
+            <div class="level-item has-text-centered">                
+                <form action="" method="post"> 
+                    <div class="field has-addons">
+                        <p>{{ form.title(class="input", placeholder="Title") }}</p>&nbsp
+                        <p>{{ form.artist(class="input", placeholder="Artist") }}</p>&nbsp
+                        <p>{{ form.submit(class="button") }}</p>
+                    </div>
+                </form>                
+            </div>   
+        </nav>
+        <section class="section">
+            {% if songs != None %}
+                <table class="table is-fullwidth has-text-left is-hoverable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Title</th>
+                            <th>Artist</th>
+                            <th>Release</th>
+                            <th>Year</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for song in songs %}
+                            <tr>
+                                <td>                                    
+                                    <img width="64" height="64" id="{{song.release_id}}" />                                   
+                                </td>
+                                <td>{{ song.title }}</td>
+                                <td>{{ song.artist }}</td>
+                                <td>{{ song.album }}</td>
+                                <td>{{ song.year }}</td>
+                                <td></td>
+                            </tr>
+                        {% endfor %}
+
+                        <script>
+                            var imgs = document.getElementsByTagName("img");
+                            for (var i = 0; i < imgs.length; i++) {
+                                img = imgs[i];
+                                id = img.id;
+                                console.log(id);
+                                fetch('http://coverartarchive.org/release/' + id)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        for (var i = 0; i < data["images"].length; i++) {
+                                            image = data["images"][i]
+                                            if (image['types'].includes("Front")) {
+                                                url = image['thumbnails']['small']
+                                                if (url == null)
+                                                    url = image['thumbnails']['250']
+                                                if (url == null)
+                                                    url = image['thumbnails']['500']
+                                                if (url == null)
+                                                    url = image['image']
+
+                                                id = url.split("/")[4]
+                                                console.log(id)
+                                                document.getElementById(id).src = url;
+                                                break;
+                                            }
+                                        }
+                                    })
+                                .catch(console.error);  
+                                console.log(id);
+                            }                              
+                        </script>
+                    </tbody>
+                </table>
+            {% endif %}
+        </section>
+    </section>  
+{% endblock %}
