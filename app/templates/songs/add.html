@@ -30,13 +30,21 @@
                         {% for song in songs %}
                             <tr>
                                 <td>                                    
-                                    <img width="64" height="64" id="{{song.release_id}}" />                                   
+                                    <img width="64" height="64" id="{{song.release_id}}"/>                                   
                                 </td>
                                 <td>{{ song.title }}</td>
                                 <td>{{ song.artist }}</td>
                                 <td>{{ song.album }}</td>
                                 <td>{{ song.year }}</td>
-                                <td></td>
+                                <td>
+                                    <form action="choose" method="POST">                                        
+                                        <button class="button" name="{{song.__dict__}}">
+                                            <span class="icon is-small">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </span>
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         {% endfor %}
 

@@ -5,6 +5,10 @@ from flask import Flask, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_kvsession import KVSessionExtension
+from simplekv.memory.redisstore import RedisStore
+import redis
+
 from config import Config
 
 
@@ -18,8 +22,12 @@ def create_app(config_class = Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    store = RedisStore(redis.StrictRedis())
+    KVSessionExtension(store, app)
+
     db.init_app(app)
     migrate.init_app(app, db)
+    
     login.init_app(app)
 
     from app.errors import bp as errors_bp

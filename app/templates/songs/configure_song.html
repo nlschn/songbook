@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="section">
+        <div class="columns">
+            <div class="column">
+                <img src="{{song.cover_url}}" />
+            </div>
+            <div class="column is-three-quarters"> 
+                <p class="subtitle">Song info</p>
+                <div class="columns">
+                    <div class="column is-2">
+                        <b>Title</b>
+                        <br>
+                        <b>Artist</b>
+                        <br>
+                        <b>Album</b>
+                        <br>
+                        <b>Year</b>
+                    </div>
+                    <div class="column">
+                        {{ song.title }}
+                        <br>
+                        {{ song.artist }}
+                        <br>
+                        {{ song.album }}
+                        <br>
+                        {{ song.year }}
+                    </div>
+                </div>  
+
+                <p class="subtitle">Lyrics</p>
+                <form action="" method="post">
+                    {{ form.hidden_tag() }}
+                    {% for error in form.lyrics.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                    <p>{{ form.lyrics(class="textarea", rows=10) }}</p>&nbsp
+                    <p>{{ form.submit(class="button") }}</p>
+                </form>
+                
+                {% if img_paths != None %}
+                    <br>
+                    <p class="subtitle">Preview ({{ '1 page' if pages == 1 else pages_str + ' pages' }})</p>
+                    {% for img_path in img_paths%}
+                        <img src="{{url_for('static', filename='/'.join(img_path.split('/')[2:]))}}" width=700px />
+                    {% endfor %}
+                {% endif %}
+            </div>           
+        </div>
+    </section>  
+{% endblock %}
