@@ -158,7 +158,7 @@ def choose():
 
 
 @bp.route('/collection/download', methods = ["POST"])
-def download_file():
+def download():
     delete_user_temp_files()
 
     args = list(request.form.items())
@@ -172,8 +172,23 @@ def download_file():
 
     pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)
     path = os.path.join(*pdf_path.split("/")[1:])
-    print(path)
     return send_file(path, as_attachment=True)
+
+@bp.route('/collection/delete', methods = ["POST"])
+def delete():
+    delete_user_temp_files()
+
+    args = list(request.form.items())
+    song_db_id = args[0][0]
+
+    song = Song.query.get(song_db_id)
+    db.session.delete(song)
+    db.session.commit()
+
+    flash(f"Successfully removed song {song.title} by {song.artist} from your collection.")
+
+    return redirect(url_for("songs.collection"))
+
 
 
 def build_song(title, artist, release, year):
