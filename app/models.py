@@ -15,6 +15,27 @@ def load_user(id):
 # > flask db migrate -m "[message]"
 # > flask db upgrade
 
+class Song(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    mbid = db.Column(db.String(1000), index=True)
+    release_id = db.Column(db.String(1000), index=True)
+    cover_url = db.Column(db.String(2000))
+
+    title = db.Column(db.String(1000), index=True)
+    artist = db.Column(db.String(1000), index=True)
+    release = db.Column(db.String(1000), index=True)
+    year = db.Column(db.Integer, index=True)
+    
+    lyrics = db.Column(db.String(1000000), index=True)
+    notes = db.Column(db.String(1000), index=True)
+    capo = db.Column(db.String(1000), index=True)
+
+    added = db.Column(db.DateTime, default = datetime.now)
+    last_changed = db.Column(db.DateTime, default = datetime.now)
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -22,6 +43,8 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     last_seen = db.Column(db.DateTime, default = datetime.now)
     registered = db.Column(db.DateTime, default = datetime.now)
+
+    songs = db.relationship('Song', backref='user', lazy='dynamic')
 
     def __repr__(self):
         return f'<User {self.username}>'

@@ -11,3 +11,6 @@ class SongSearchForm(FlaskForm):
 class LyricsForm(FlaskForm):
     lyrics = TextAreaField('Lyrics', validators=[DataRequired(), Length(max = 100000)])
     submit = SubmitField('Build')
+
+class LyricsFormAddToDb(FlaskForm):
+    submit = SubmitField('Add to collection')

@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <section class="section">
+                {% for message in messages %}
+                <div class="notification is-danger">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </section>
+        {% endif %}
+    {% endwith %}
     <section class="section">
         <div class="columns">
             <div class="column">
@@ -29,6 +40,14 @@
                     </div>
                 </div>  
 
+                {% if img_paths != None %}
+                    <form action="" method="post">
+                        {{ form.hidden_tag() }}
+                        <p>{{ form_add.submit(class="button") }}</p>
+                    </form> 
+                    <br>          
+                {% endif %}
+
                 <p class="subtitle">Lyrics</p>
                 <form action="" method="post">
                     {{ form.hidden_tag() }}
@@ -36,10 +55,10 @@
                         <span style="color: red;">{{ error }}</span>
                     {% endfor %}
                     <p>{{ form.lyrics(class="textarea", rows=10) }}</p>&nbsp
-                    <p>{{ form.submit(class="button") }}</p>
-                </form>
-                
-                {% if img_paths != None %}
+                    <p>{{ form.submit(class="button") }}</p>                    
+                </form>     
+                <br>
+                {% if img_paths != None %}                   
                     <br>
                     <p class="subtitle">Preview ({{ '1 page' if pages == 1 else pages_str + ' pages' }})</p>
                     {% for img_path in img_paths%}

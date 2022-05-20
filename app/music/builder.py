@@ -54,8 +54,10 @@ def set_listings(content):
     new_pars = []
     for par in pars:
         new_par = remove_empty_lines(par)
-        if new_par != '' and new_par != None:
+        if new_par != None:
             new_pars.append(new_par) 
+    if(new_pars[0] == ''):
+        new_pars.remove('')
         
     return new_pars
 
@@ -109,9 +111,9 @@ def build_song_one_page(title, artist, album, year, pars, captions, path):
         pages = PdfFileReader(pdf).getNumPages()
 
     if pages == 1:
-        save_images(file_name, pdf_name)
+        img_paths = save_images(file_name, pdf_name)
         msg("Complete.")
-        return
+        return pdf_name, img_paths
 
     # Build first time with normal size.
     msg("Document too long. Trying again with smaller font.")
@@ -134,7 +136,9 @@ def build_tex(content, title, artist, album, year, path):
 
     if len(pars) != len(captions):
         msg("Error. Make sure every paragraph is labelled with [...]")
-        return False
+        print(len(captions))
+        print(len(pars))
+        return None, None
 
     return build_song_one_page(title, artist, album, year, pars, captions, path)  
      
