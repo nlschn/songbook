@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 from pylatex import Document, Command, Center, LineBreak, Package
 from pylatex.base_classes import Environment
 from pylatex.base_classes.command import CommandBase
@@ -34,7 +35,7 @@ def remove_empty_lines(content):
 
 def sanitize_input(content): 
     result = content       
-    t = {"”" : '"', "’" : "'", "–" : "-", "…" : "...", "—" : "-", "‘" : "'", "à" : "a", "é" : "e", "è" : "e", "ê" : "e", "î" : "i", "À" : "A", "É" : "E", "È" : "E", "Ê" : "E", "Î" : "I"}
+    t = {"”" : '"', "’" : "'", "–" : "-", "…" : "...", "—" : "-", "‘" : "'"}
 
     for c in t:
         result = re.sub(c, t[c], result)
@@ -74,14 +75,15 @@ def build_lyrics(captions, pars, doc):
 def create_doc(title, artist, album, year, size):
     geometry = {"left" : "2cm", "right" : "2cm", "top" : "0.75cm", "bottom" : "1cm"}
 
-    package_listings = Package("listings")
-
-    doc = Document(indent=False, geometry_options=geometry, documentclass = "article", inputenc="latin1")
+    doc = Document(indent=False, geometry_options=geometry, documentclass = "article")
+    doc.packages.append(Package("fontspec"))
+    
+    doc.append(NoEscape("\setmonofont{[CutiveMono-Regular.ttf]}"))
     doc.append(NoPageNumbers())
     with doc.create(Center()):
-        doc.append(bold(title))
+        doc.append(bold(sanitize_input(title)))
         doc.append(LineBreak())
-        doc.append(f"{artist} - {album} ({year})")
+        doc.append(f"{sanitize_input(artist)} - {sanitize_input(album)} ({year})")
     doc.append(Command("scriptsize") if size == "small" else Command("footnotesize"))
     return doc
     
@@ -100,12 +102,15 @@ def build_song_one_page(title, artist, album, year, pars, captions, path):
     file_name = f"{path}/{title}_{artist}_{year}"#os.path.join(path, f"{title}_{artist}_{year}")
     pdf_name = f"{path}/{title}_{artist}_{year}.pdf"#os.path.join(path, f"{title}_{artist}_{year}.pdf")
 
+    # Copy font file to the tex path
+    shutil.copy("CutiveMono-Regular.ttf", path)
+
     # Build first time with normal size.
     msg("Creating LaTeX document...")
     doc = create_doc(title, artist, album, year, "normal")
     build_lyrics(captions, pars, doc)
     msg("Building LaTeX document...")
-    doc.generate_pdf(file_name, silent = True)
+    doc.generate_pdf(file_name, silent = True, clean=False,compiler='lualatex')
 
     with open(pdf_name,'rb') as pdf:
         pages = PdfFileReader(pdf).getNumPages()
@@ -121,7 +126,7 @@ def build_song_one_page(title, artist, album, year, pars, captions, path):
     doc = create_doc(title, artist, album, year, "small")
     build_lyrics(captions, pars, doc)
     msg("Building LaTeX document...")
-    doc.generate_pdf(file_name, silent = True)
+    doc.generate_pdf(file_name, silent = True, clean=False,compiler='lualatex')
 
     img_paths = save_images(file_name, pdf_name)
 
