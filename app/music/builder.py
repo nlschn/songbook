@@ -18,18 +18,6 @@ print_msg = False
 def msg(s):
     if print_msg: print(s)
 
-
-class LstListing(Environment):
-    """A class to wrap LaTeX's listing environment."""
-
-    packages = [Package('listings')]
-    escape = False
-    content_separator = "\n"
-
-class NoPageNumbers(CommandBase):
-    _latex_name = NoEscape(",")  
-    packages = [Package('nopageno')]
-
 def remove_empty_lines(content):    
     return "".join([s for s in content.splitlines(True) if s.strip(" \t\r\n")])
 
@@ -64,26 +52,31 @@ def set_listings(content):
 
 def build_lyrics(captions, pars, doc):
     for i in range(0, len(pars)):
+        if i > 0:
+            doc.append(NewLine())
         doc.append(bold(captions[i]))
         if not re.match("^[\s]+$", pars[i]):
-            with doc.create(LstListing()):
-                doc.append(pars[i])
-        else:
             doc.append(NewLine())
+            doc.append(NoEscape("{ \cutive \obeyspaces"))           
+            doc.append(pars[i])     
+            doc.append(NoEscape("}"))
+            
   
 
-def create_doc(title, artist, album, year, size):
-    geometry = {"left" : "2cm", "right" : "2cm", "top" : "0.75cm", "bottom" : "1cm"}
+def create_doc(title, artist, release, year, size):
+    geometry = {"left" : "2cm", "right" : "2cm", "top" : "1cm", "bottom" : "1cm"}
 
-    doc = Document(indent=False, geometry_options=geometry, documentclass = "article")
+    doc = Document(indent=False, geometry_options = geometry, documentclass = "article")
+
     doc.packages.append(Package("fontspec"))
+    doc.packages.append(Package('nopageno'))
+
+    doc.append(NoEscape("\\newfontfamily{\cutive}{[CutiveMono-Regular.ttf]}"))
     
-    doc.append(NoEscape("\setmonofont{[CutiveMono-Regular.ttf]}"))
-    doc.append(NoPageNumbers())
     with doc.create(Center()):
         doc.append(bold(sanitize_input(title)))
         doc.append(LineBreak())
-        doc.append(f"{sanitize_input(artist)} - {sanitize_input(album)} ({year})")
+        doc.append(f"{sanitize_input(artist)} - {sanitize_input(release)} ({year})")
     doc.append(Command("scriptsize") if size == "small" else Command("footnotesize"))
     return doc
     
@@ -98,7 +91,7 @@ def save_images(file_name, pdf_name):
         i += 1
     return paths
 
-def build_song_one_page(title, artist, album, year, pars, captions, path):
+def build_song_one_page(title, artist, release, year, pars, captions, path):
     file_name = f"{path}/{title}_{artist}_{year}"#os.path.join(path, f"{title}_{artist}_{year}")
     pdf_name = f"{path}/{title}_{artist}_{year}.pdf"#os.path.join(path, f"{title}_{artist}_{year}.pdf")
 
@@ -107,7 +100,7 @@ def build_song_one_page(title, artist, album, year, pars, captions, path):
 
     # Build first time with normal size.
     msg("Creating LaTeX document...")
-    doc = create_doc(title, artist, album, year, "normal")
+    doc = create_doc(title, artist, release, year, "normal")
     build_lyrics(captions, pars, doc)
     msg("Building LaTeX document...")
     doc.generate_pdf(file_name, silent = True, clean=False,compiler='lualatex')
@@ -123,7 +116,7 @@ def build_song_one_page(title, artist, album, year, pars, captions, path):
     # Build first time with normal size.
     msg("Document too long. Trying again with smaller font.")
     msg("Creating LaTeX document...")
-    doc = create_doc(title, artist, album, year, "small")
+    doc = create_doc(title, artist, release, year, "small")
     build_lyrics(captions, pars, doc)
     msg("Building LaTeX document...")
     doc.generate_pdf(file_name, silent = True, clean=False,compiler='lualatex')
@@ -134,7 +127,7 @@ def build_song_one_page(title, artist, album, year, pars, captions, path):
 
     return pdf_name, img_paths
 
-def build_tex(content, title, artist, album, year, path):
+def build_tex(content, title, artist, release, year, path):
     content = sanitize_input(content)   
     captions = replace_brackets(content)
     pars = set_listings(content) 
@@ -145,7 +138,7 @@ def build_tex(content, title, artist, album, year, path):
         print(len(pars))
         return None, None
 
-    return build_song_one_page(title, artist, album, year, pars, captions, path)  
+    return build_song_one_page(title, artist, release, year, pars, captions, path)  
      
 
 

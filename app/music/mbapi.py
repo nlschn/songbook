@@ -9,12 +9,12 @@ musicbrainzngs.set_useragent("Songbook", "0.0.0", "taylornx77@gmail.com")
 
 
 class SongInfo:
-    def __init__(self, mbid, release_id, title, artist, album, year, cover_url):
+    def __init__(self, mbid, release_id, title, artist, release, year, cover_url):
         self.mbid = mbid
         self.release_id = release_id
         self.title = title
         self.artist = artist
-        self.album = album
+        self.release = release
         self.year = year
         self.cover_url = cover_url
 
@@ -59,12 +59,11 @@ def search(title, artist):
             if not year.isnumeric(): continue
 
             year = int(year)
-
-            # print(f"> {album} ({year}) - {type}")                   
+  
 
             s = SongInfo(id, release["id"], title, artist, album, year, None)
             
-            identical_songs = list(filter(lambda x : x.title == s.title and x.artist == s.artist and x.album == x.album, songs))
+            identical_songs = list(filter(lambda x : x.title == s.title and x.artist == s.artist and x.release == x.release, songs))
             
             if len(identical_songs) == 0:
                 songs.append(s)
@@ -78,5 +77,5 @@ def search(title, artist):
 
     # for s in songs:
         # s.cover_url =  get_cover_url(s.release_id)    
-        # print(f"{s.title} - {s.artist} - {s.album} ({s.year})'")
+        # print(f"{s.title} - {s.artist} - {s.release} ({s.year})'")
     return songs

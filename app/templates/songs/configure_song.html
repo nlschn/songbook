@@ -14,50 +14,88 @@
     {% endwith %}
     <section class="section">
         <div class="columns">
-            <div class="column">
+            <div class="column is-4">
                 <img src="{{song.cover_url}}" />
             </div>
-            <div class="column is-three-quarters"> 
+            <div class="column is-5"> 
                 <p class="subtitle">Song info</p>
-                <div class="columns">
-                    <div class="column is-2">
-                        <b>Title</b>
+                <form action="" method="post">
+                    {{ form.hidden_tag() }}
+                    <b>Title</b>
+                    <p>{{ form.title(class = "input", value = song.title) }}</p>
+                    {% for error in form.title.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                    <br>
+
+                    <b>Artist</b>
+                    <p>{{ form.artist(class = "input", value = song.artist) }}</p>
+                    {% for error in form.artist.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                    <br>
+
+                    <b>Release</b>
+                    <p>{{ form.release(class = "input", value = song.release) }}</p>
+                    {% for error in form.release.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                    <br>
+
+                    <b>Year</b>
+                    <p>{{ form.year(class = "input", value = song.year) }}</p>
+                    {% for error in form.year.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                    <br>
+
+                    <b>Lyrics</b>                    
+                    {% for error in form.lyrics.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}                   
+                    <p>{{ form.lyrics(class = "textarea", rows = 10) }}</p>&nbsp                    
+                    <br>
+
+                    <b>Capo</b>
+                    {% for error in form.notes.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                    <p>{{ form.capo(class="input") }}</p>&nbsp
+                    <br>
+
+                    <b>Notes</b>
+                    {% for error in form.notes.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                    <p>{{ form.notes(class="textarea", rows=4) }}</p>&nbsp
+                    
+                    {% if view == "new" %}
+                        <p>{{ form.submit(class="button") }}</p>
+                    {% else %}
+                        <div class="field has-addons">
+                            <p class="control">
+                            <p>{{ form.apply(class="button") }}</p>
+                            </p>
+                        </div>
                         <br>
-                        <b>Artist</b>
-                        <br>
-                        <b>Album</b>
-                        <br>
-                        <b>Year</b>
-                    </div>
-                    <div class="column">
-                        {{ song.title }}
-                        <br>
-                        {{ song.artist }}
-                        <br>
-                        {{ song.album }}
-                        <br>
-                        {{ song.year }}
-                    </div>
-                </div>  
+                    {% endif %}
+                </form>     
+                <br>
 
                 {% if img_paths != None %}
                     <form action="" method="post">
-                        {{ form.hidden_tag() }}
-                        <p>{{ form_add.submit(class="button") }}</p>
+                        {% if view == "new" %}     
+                            {{ form_add.hidden_tag() }}
+                            <div class="field has-addons">
+                                <p class="control">                                
+                                    <p>{{ form_add.submit(class="button") }}</p>
+                                </p>
+                            </div>
+                            <br>   
+                        {% endif %}
                     </form> 
-                    <br>          
-                {% endif %}
+               {% endif %}
 
-                <p class="subtitle">Lyrics</p>
-                <form action="" method="post">
-                    {{ form.hidden_tag() }}
-                    {% for error in form.lyrics.errors %}
-                        <span style="color: red;">{{ error }}</span>
-                    {% endfor %}
-                    <p>{{ form.lyrics(class="textarea", rows=10) }}</p>&nbsp
-                    <p>{{ form.submit(class="button") }}</p>                    
-                </form>     
-                <br>
                 {% if img_paths != None %}                   
                     <br>
                     <p class="subtitle">Preview ({{ '1 page' if pages == 1 else pages_str + ' pages' }})</p>
@@ -65,7 +103,9 @@
                         <img src="{{url_for('static', filename='/'.join(img_path.split('/')[2:]))}}" width=700px />
                     {% endfor %}
                 {% endif %}
-            </div>           
+            </div>    
+            <div class="column">
+            </div>
         </div>
     </section>  
 {% endblock %}

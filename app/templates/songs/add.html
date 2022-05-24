@@ -6,6 +6,7 @@
             <div class="level-item has-text-centered">                
                 <form action="" method="post"> 
                     <div class="field has-addons">
+                        {{ form.hidden_tag() }}
                         <p>{{ form.title(class="input", placeholder="Title") }}</p>&nbsp
                         <p>{{ form.artist(class="input", placeholder="Artist") }}</p>&nbsp
                         <p>{{ form.submit(class="button") }}</p>

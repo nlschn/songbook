@@ -64,9 +64,9 @@ def choose():
     form = LyricsForm()
     form_add = LyricsFormAddToDb()
 
-    if args[0][0][0] == "{": # if the argument is a dict, we came here from the previous page
+    if len(args) == 1: # if the argument is a song, we came from the search page
         song_dict = ast.literal_eval(args[0][0])
-        song = mbapi.SongInfo(song_dict["mbid"], song_dict["release_id"], song_dict["title"], song_dict["artist"], song_dict["album"], song_dict["year"], mbapi.get_cover_url(song_dict["release_id"]))
+        song = mbapi.SongInfo(song_dict["mbid"], song_dict["release_id"], song_dict["title"], song_dict["artist"], song_dict["release"], song_dict["year"], mbapi.get_cover_url(song_dict["release_id"]))
         
         delete_user_temp_files()
 
@@ -76,7 +76,7 @@ def choose():
             user = current_user, 
             title = "Add a new song", 
             subtitle = f"{song.title} by {song.artist}", 
-            view = "configure",
+            view = "new",
             song = song,
             form = form,
             form_add = form_add,
@@ -90,17 +90,17 @@ def choose():
         
         if form.validate_on_submit(): # we pressed the build button
             session["lyrics"] = form.lyrics.data
-            session["notes"] = ""#form.notes.data
-            session["capo"] = ""#form.capo.data            
-                      
-            pdf_path, img_paths = build_song(song.title, song.artist, song.album, song.year)
-            if pdf_path == None and img_paths == None:
+            session["notes"] = form.notes.data
+            session["capo"] = form.capo.data            
+               
+            pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)
+            if pdf_path == None or img_paths == None:
                 flash("Your input is malformatted.")
                 return render_template('songs/configure_song.html', 
                     user = current_user, 
                     title = "Add a new song", 
                     subtitle = f"{song.title} by {song.artist}", 
-                    view = "configure",
+                    view = "new",
                     song = song,
                     form = form,
                     form_add = form_add,
@@ -113,23 +113,23 @@ def choose():
                 user = current_user, 
                 title = "Add a new song", 
                 subtitle = f"{song.title} by {song.artist}", 
-                view = "configure",
+                view = "new",
                 song = song,
                 form = form,
                 form_add = form_add,
                 img_paths = img_paths,
                 pdf_path = pdf_path,
                 pages = len(img_paths),
-                pages_str = str(len(img_paths)))
+                pages_str = str(len(img_paths)))                
 
-        if form_add.validate_on_submit(): # else we pressed the add to collection button            
+        elif form_add.validate_on_submit(): # else we pressed the add to collection button            
             db_song = Song(user_id = current_user.id,
                            mbid = song.mbid,
                            release_id = song.release_id,
                            cover_url = song.cover_url,
                            title = song.title,
                            artist = song.artist,
-                           release = song.album,
+                           release = song.release,
                            year = song.year,
                            lyrics = session["lyrics"],
                            notes = session["notes"],
@@ -141,13 +141,14 @@ def choose():
 
             flash(f"Successfully added song {song.title} by {song.artist} to your collection.")
             return redirect(url_for("songs.collection"))
+            
 
         # We came here from the selection page
         return render_template('songs/configure_song.html', 
             user = current_user, 
             title = "Add a new song", 
             subtitle = f"{song.title} by {song.artist}", 
-            view = "configure",
+            view = "new",
             song = song,
             form = form,
             form_add = form_add,
@@ -156,6 +157,92 @@ def choose():
             pages = None,
             pages_str = None)
 
+@bp.route('/collection/edit', methods = ["POST"])
+def edit():
+    # Load all data. If the page is called with one arg, take it as song id, else read it
+    # from the session
+    delete_user_temp_files()
+
+    args = list(request.form.items())
+    if len(args) == 1:
+        song_db_id = args[0][0]   
+        session["current_song_db_id"] = song_db_id
+    else:
+        song_db_id = session["current_song_db_id"]
+
+    song = Song.query.get(song_db_id)
+       
+    form = LyricsForm()
+    form_add = None
+
+    if form.validate_on_submit(): # we pressed the apply button
+        song.title = form.title.data
+        song.artist = form.artist.data
+        song.release = form.release.data
+        song.year = int(form.year.data)
+        song.notes = form.notes.data
+        song.capo = form.capo.data
+        song.last_changed = datetime.now()
+        db.session.commit()
+        
+        session["lyrics"] = form.lyrics.data
+        pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)        
+
+        if pdf_path == None or img_paths == None:
+            flash("Your input is malformatted.")
+            return render_template('songs/configure_song.html', 
+                user = current_user, 
+                title = "Edit a song", 
+                subtitle = f"{song.title} by {song.artist}", 
+                view = "edit",
+                song = song,
+                form = form,
+                form_add = form_add,
+                img_paths = None,
+                pdf_path = None,
+                pages = None,
+                pages_str = None)        
+
+        song.lyrics = form.lyrics.data
+        db.session.commit()
+
+        return render_template('songs/configure_song.html', 
+            user = current_user, 
+            title = "Edit a song", 
+            subtitle = f"{song.title} by {song.artist}", 
+            view = "edit",
+            song = song,
+            form = form,
+            form_add = form_add,
+            img_paths = img_paths,
+            pdf_path = pdf_path,
+            pages = len(img_paths),
+            pages_str = str(len(img_paths)))
+
+    # if we call the page from the colletion page, show initial data
+    session["lyrics"] = song.lyrics
+    pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)
+    if pdf_path == None or img_paths == None:
+        flash("Somethin went wrong. Could not build lyrics.")
+        return redirect(url_for("songs.collection"))
+    
+    form.lyrics.data = song.lyrics
+    form.capo.data = song.capo
+    form.notes.data = song.notes
+
+    return render_template('songs/configure_song.html', 
+        user = current_user, 
+        title = "Edit a song", 
+        subtitle = f"{song.title} by {song.artist}", 
+        view = "edit",
+        song = song,
+        form = form,
+        form_add = form_add,
+        img_paths = img_paths,
+        pdf_path = pdf_path,
+        pages = len(img_paths),
+        pages_str = str(len(img_paths)),
+        current_song_db_id = song_db_id)
 
 @bp.route('/collection/download', methods = ["POST"])
 def download():
