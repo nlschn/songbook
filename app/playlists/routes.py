@@ -1,10 +1,7 @@
-import pandas as pd
 from app import db
 from app.playlists import bp
-from app.music import mbapi
 from app.playlists.forms import NewPlaylistForm
-from app.music.builder import build_tex
-from app.models import Playlist, Song
+from app.models import Playlist
 
 import ast
 import os
@@ -18,20 +15,21 @@ from app.models import Playlist
 @bp.route("/playlists", methods = ["GET", "POST"])
 @login_required
 def playlists():
-    playlists = current_user.playlists.all()
     create_form = NewPlaylistForm()
 
     if create_form.validate_on_submit():
-        print ("lihfskd")
         playlist = Playlist(name = create_form.name.data)
 
         db.session.add(playlist)
 
-        # current_user.playlists.append(playlist)
+        current_user.playlists.append(playlist)
 
         db.session.commit()
 
         flash(f'Playlist "{playlist.name}" successfully created.')
+
+    playlists = current_user.playlists.all()
+    lengths =  {p.name : len(p.songs) for p in playlists}
 
     # Show the default page
     return render_template(
@@ -40,4 +38,20 @@ def playlists():
         subtitle = "Songbook", 
         view = "playlists",
         playlists = playlists,
+        lengths = lengths,
         create_form = create_form)
+
+
+@bp.route('/delete', methods = ["POST"])
+def delete():
+    args = list(request.form.items())
+    print(args)
+    playlist_db_id = args[0][0]
+
+    playlist = Playlist.query.get(playlist_db_id)
+    db.session.delete(playlist)
+    db.session.commit()
+
+    flash(f'Successfully removed the playlist "{playlist.name}".')
+
+    return redirect(url_for("playlists.playlists"))

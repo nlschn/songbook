@@ -12,61 +12,65 @@
             </section>
         {% endif %}
     {% endwith %}
+
     <section class="section">
         {% if playlists != [] %}
-            <table class="table is-fullwidth has-text-left is-hoverable">
-                <thead>
-                    <tr>                        
-                        <th>Name</th>
-                        <th>Songs</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for playlist in playlists %}
-                    <tr>
-                        <td>{{ playlist.name }}</td>
-                        <td>{{ length(playlist.songs) }}</td>
-                        
-                        <td>
-                            <div class="field has-addons">
-                                <form action="" method="POST">
-                                    <button class="button" name="">
-                                        <span class="icon is-small">
-                                            <i class="fas fa-download"></i>
-                                        </span>
-                                    </button>
-                                </form>  
-                                &nbsp
-                                <form action="" method="POST">
-                                    <button class="button" name="">
-                                        <span class="icon is-small">
-                                            <i class="fas fa-edit"></i>
-                                        </span>
-                                    </button>
-                                </form>
-                                &nbsp
-                                <form action="" method="POST">
-                                    <button class="button" name="">
-                                        <span class="icon is-small">
-                                            <i class="fas fa-trash"></i>
-                                        </span>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-        
-                    
-                </tbody>
-            </table>
+            <nav class="level">
+                <div class="level-item has-text-centered">
+                    <table class="table is-hoverable has-text-left">
+                        <thead>
+                            <tr>                        
+                                <th>Name</th>
+                                <th>Songs</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for playlist in playlists %}
+                            <tr>
+                                <td>{{ playlist.name }}</td>
+                                <td>{{ lengths[playlist.name] }}</td>
+                                
+                                <td>
+                                    <div class="field has-addons">
+                                        <form action="" method="POST">
+                                            <button class="button" name="">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-download"></i>
+                                                </span>
+                                            </button>
+                                        </form>  
+                                        &nbsp
+                                        <form action="" method="POST">
+                                            <button class="button" name="">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-edit"></i>
+                                                </span>
+                                            </button>
+                                        </form>
+                                        &nbsp
+                                        <form action="delete" method="POST">
+                                            <button class="button" name="{{playlist.id}}">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-trash"></i>
+                                                </span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+            </nav>
         {% else %}
             <p class="subtitle">
                 You haven't created any playlists.
             </p>
         {% endif %}
     </section>
-
 
     <div id="modal-new-playlist" class="modal">
         <div class="modal-background"></div>

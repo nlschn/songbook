@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Length, ValidationError
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired, Length
 from app.models import User
 
 class NewPlaylistForm(FlaskForm):

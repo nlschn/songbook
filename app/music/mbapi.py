@@ -1,12 +1,7 @@
-from math import inf
 import musicbrainzngs
 import requests
 
-
-
-
 musicbrainzngs.set_useragent("Songbook", "0.0.0", "taylornx77@gmail.com")
-
 
 class SongInfo:
     def __init__(self, mbid, release_id, title, artist, release, year, cover_url):

@@ -15,12 +15,12 @@ def load_user(id):
 # > flask db migrate -m "[message]"
 # > flask db upgrade
 
-song_playlist_association_table = db.Table(
-    "song_playlist_association",
-    db.Model.metadata,
-    db.Column("playlist_id", db.ForeignKey("playlist.id")),
-    db.Column("song_id", db.ForeignKey("song.id")),
-)
+class SongPlaylistAssociationTable(db.Model):
+    __tablename__ = "song_playlist_association"
+
+    playlist_id = db.Column(db.Integer, db.ForeignKey("playlist.id"), primary_key = True)
+    song_id = db.Column(db.Integer, db.ForeignKey("song.id"), primary_key = True)
+
 
 class Playlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -30,8 +30,7 @@ class Playlist(db.Model):
     added = db.Column(db.DateTime, default = datetime.now)
     last_changed = db.Column(db.DateTime, default = datetime.now)
 
-    songs = db.relationship("Song", secondary = song_playlist_association_table, back_populates = "playlists")
-
+    songs = db.relationship("Song", secondary = "song_playlist_association", back_populates = "playlists")
 
 class Song(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -53,7 +52,7 @@ class Song(db.Model):
     added = db.Column(db.DateTime, default = datetime.now)
     last_changed = db.Column(db.DateTime, default = datetime.now)
 
-    playlists = db.relationship("Playlist", secondary = song_playlist_association_table, back_populates = "songs")
+    playlists = db.relationship(Playlist, secondary = "song_playlist_association", back_populates = "songs")
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)

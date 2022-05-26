@@ -1,4 +1,3 @@
-import os
 import re
 import shutil
 from pylatex import Document, Command, Center, LineBreak, Package
@@ -60,8 +59,7 @@ def build_lyrics(captions, pars, doc):
             doc.append(NoEscape("{ \cutive \obeyspaces"))           
             doc.append(pars[i])     
             doc.append(NoEscape("}"))
-            
-  
+           
 
 def create_doc(title, artist, release, year, size):
     geometry = {"left" : "2cm", "right" : "2cm", "top" : "1cm", "bottom" : "1cm"}
