@@ -1,16 +1,15 @@
 from app import db
+from app.models import Playlist, Song
 from app.playlists import bp
-from app.playlists.forms import NewPlaylistForm
-from app.models import Playlist
+from app.playlists.forms import AddSongToPlaylistForm, NewPlaylistForm
 
-import ast
-import os
 from flask import render_template, flash, redirect, url_for, request, session, send_file
 from flask_login import current_user, login_required
-from werkzeug.urls import url_parse
 from datetime import datetime
-from app.models import Playlist
 
+
+
+import json
 
 @bp.route("/playlists", methods = ["GET", "POST"])
 @login_required
@@ -31,6 +30,34 @@ def playlists():
     playlists = current_user.playlists.all()
     lengths =  {p.name : len(p.songs) for p in playlists}
 
+    # Calculate preview string
+    max_length = 200
+    playlist_preview = {}
+    j = 0
+
+    for p in playlists:
+        if len(p.songs) == 0: 
+            preview = "0"
+        else:
+            song_str = ""
+            char_count = 0
+            for i in range(len(p.songs)):
+                song = p.songs[i]           
+                song_str += song.title
+                char_count += len(song.title)
+
+                j += 1
+
+                if char_count < max_length and i < len(p.songs) - 1:
+                    song_str += ", "
+
+                if char_count >= max_length and j != len(p.songs):
+                    song_str += f", and {len(p.songs) - j} more"
+                    break
+
+            preview = f"{len(p.songs)} ({song_str})"
+        playlist_preview[p.id] = preview
+
     # Show the default page
     return render_template(
         'playlists/playlists.html', 
@@ -39,13 +66,61 @@ def playlists():
         view = "playlists",
         playlists = playlists,
         lengths = lengths,
+        playlist_preview = playlist_preview,
         create_form = create_form)
 
 
+@bp.route('/edit', methods = ["GET", "POST"])
+@login_required
+def edit():
+    args = list(request.form.items())
+    
+    if len(args) == 1: # if we come from the playlists page
+        playlist_db_id = args[0][0]
+        session["current_playlist_db_id"] = playlist_db_id
+    else: # we get the form parameters
+        playlist_db_id = session["current_playlist_db_id"]
+
+    playlist = Playlist.query.get(playlist_db_id)
+    songs = playlist.songs
+    collection = current_user.songs.all()
+    collection_by_id = {f'{x.id}' : x.to_dict() for x in collection}
+
+    form = AddSongToPlaylistForm()
+    
+    submit_pressed = len(list(filter(lambda y : y[0] == "submit", args))) == 1 # make sure to not update when select or deselect is pressed
+    
+    if form.validate_on_submit() and submit_pressed: # We click "Add selected songs"
+        # Add songs and show default page
+        checked_song_ids = list(map(lambda x : int(x[0]), filter(lambda y : y[1] == "on", args)))
+        
+        for song_id in checked_song_ids:
+            song_to_add = Song.query.get(song_id)
+
+            if song_to_add not in playlist.songs:
+                playlist.songs.append(song_to_add)
+        db.session.commit()
+
+        songs = playlist.songs
+
+    # Show the default page
+    return render_template(
+        'playlists/edit.html', 
+        user = current_user, title = 'Edit playlist', 
+        subtitle = playlist.name, 
+        view = "playlists",
+        playlist = playlist,
+        songs = songs,
+        form = form,
+        collection = collection,
+        collection_by_id = collection_by_id)
+
+
 @bp.route('/delete', methods = ["POST"])
+@login_required
 def delete():
     args = list(request.form.items())
-    print(args)
+    
     playlist_db_id = args[0][0]
 
     playlist = Playlist.query.get(playlist_db_id)
@@ -55,3 +130,18 @@ def delete():
     flash(f'Successfully removed the playlist "{playlist.name}".')
 
     return redirect(url_for("playlists.playlists"))
+
+@bp.route('/remove', methods = ["POST"])
+@login_required
+def remove():
+    playlist_db_id = session["current_playlist_db_id"]
+    playlist = Playlist.query.get(playlist_db_id)
+
+    args = list(request.form.items())
+    id_to_remove = args[0][0]
+    song_to_remove = Song.query.get(id_to_remove)
+    playlist.songs.remove(song_to_remove)
+    
+    db.session.commit()
+    
+    return redirect(url_for("playlists.edit"))

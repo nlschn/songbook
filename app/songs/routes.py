@@ -1,4 +1,3 @@
-import pandas as pd
 from app import db
 from app.songs import bp
 from app.music import mbapi

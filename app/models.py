@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from hashlib import md5
 from datetime import datetime
 
+
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
@@ -14,6 +15,9 @@ def load_user(id):
 # In order to update database:
 # > flask db migrate -m "[message]"
 # > flask db upgrade
+
+from json import JSONEncoder
+from typing import Any, Type
 
 class SongPlaylistAssociationTable(db.Model):
     __tablename__ = "song_playlist_association"
@@ -53,6 +57,26 @@ class Song(db.Model):
     last_changed = db.Column(db.DateTime, default = datetime.now)
 
     playlists = db.relationship(Playlist, secondary = "song_playlist_association", back_populates = "songs")
+
+    def to_dict(self):
+        return {
+            'id' : self.id,
+            'user_id' : self.user_id,
+            'mbid' : self.mbid,
+            'release_id' : self.release_id,
+            'cover_url' : self.cover_url,
+            'title' : self.title,
+            'artist' : self.artist,
+            'release' : self.release,
+            'year' : self.year,
+            # 'lyrics' : self.lyrics,
+            # 'notes' : self.notes,
+            'capo' : self.capo,
+            'added' : str(self.added),
+            'last_changed' : str(self.last_changed),
+            'playlists' : list(map(lambda p : p.id, self.playlists))
+        }
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)

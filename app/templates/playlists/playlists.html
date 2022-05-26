@@ -29,20 +29,20 @@
                             {% for playlist in playlists %}
                             <tr>
                                 <td>{{ playlist.name }}</td>
-                                <td>{{ lengths[playlist.name] }}</td>
+                                <td>{{ playlist_preview[playlist.id] }}</td>
                                 
                                 <td>
                                     <div class="field has-addons">
                                         <form action="" method="POST">
-                                            <button class="button" name="">
+                                            <button class="button" name="{{playlist.id}}">
                                                 <span class="icon is-small">
-                                                    <i class="fas fa-download"></i>
+                                                    <i class="fas fa-book"></i>
                                                 </span>
                                             </button>
                                         </form>  
                                         &nbsp
-                                        <form action="" method="POST">
-                                            <button class="button" name="">
+                                        <form action="edit" method="POST">
+                                            <button class="button" name="{{playlist.id}}">
                                                 <span class="icon is-small">
                                                     <i class="fas fa-edit"></i>
                                                 </span>
@@ -50,7 +50,7 @@
                                         </form>
                                         &nbsp
                                         <form action="delete" method="POST">
-                                            <button class="button" name="{{playlist.id}}">
+                                            <button class="button is-danger" name="{{playlist.id}}">
                                                 <span class="icon is-small">
                                                     <i class="fas fa-trash"></i>
                                                 </span>
