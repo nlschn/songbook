@@ -243,6 +243,7 @@ def edit():
         pages_str = str(len(img_paths)),
         current_song_db_id = song_db_id)
 
+
 @bp.route('/collection/download', methods = ["POST"])
 def download():
     delete_user_temp_files()
@@ -252,13 +253,10 @@ def download():
 
     song = Song.query.get(song_db_id)
 
-    session["lyrics"] = song.lyrics
-    session["notes"] = song.notes
-    session["capo"] = song.capo
-
-    pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)
+    pdf_path, img_paths = build_song(song)
     path = os.path.join(*pdf_path.split("/")[1:])
     return send_file(path, as_attachment=True)
+
 
 @bp.route('/collection/delete', methods = ["POST"])
 def delete():
@@ -276,8 +274,7 @@ def delete():
     return redirect(url_for("songs.collection"))
 
 
-
-def build_song(title, artist, release, year):
+def build_song(song):
     path = get_user_path("")
 
     if not os.path.exists("app/static"):
@@ -287,15 +284,17 @@ def build_song(title, artist, release, year):
     if not os.path.exists(path):
         os.mkdir(path)
     
-    return build_tex(session["lyrics"], title, artist, release, year, path)
+    return build_tex(song, path)
 
 
 def delete_user_temp_files():
-    path = get_user_path("")
-    if os.path.exists(path):
-        for f in os.listdir(path):            
-            os.remove(os.path.join(path, f))
-
+    try:
+        path = get_user_path("")
+        if os.path.exists(path):
+            for f in os.listdir(path):            
+                os.remove(os.path.join(path, f))
+    except:
+        print(f"ERROR Unable to delete user directory: {path}\nProbably latex was building...")
 
 def get_user_path(file):
     split = file.split(".")[:-1]

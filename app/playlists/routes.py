@@ -7,22 +7,21 @@ from flask import render_template, flash, redirect, url_for, request, session, s
 from flask_login import current_user, login_required
 from datetime import datetime
 
-
-
-import json
+import os
 
 @bp.route("/playlists", methods = ["GET", "POST"])
 @login_required
 def playlists():
+    from app.songs.routes import delete_user_temp_files
+    delete_user_temp_files()
+
     create_form = NewPlaylistForm()
 
     if create_form.validate_on_submit():
         playlist = Playlist(name = create_form.name.data)
 
         db.session.add(playlist)
-
         current_user.playlists.append(playlist)
-
         db.session.commit()
 
         flash(f'Playlist "{playlist.name}" successfully created.')
@@ -131,6 +130,7 @@ def delete():
 
     return redirect(url_for("playlists.playlists"))
 
+
 @bp.route('/remove', methods = ["POST"])
 @login_required
 def remove():
@@ -145,3 +145,33 @@ def remove():
     db.session.commit()
     
     return redirect(url_for("playlists.edit"))
+
+
+@bp.route('/download', methods = ["POST"])
+def download():
+    from app.songs.routes import delete_user_temp_files
+    delete_user_temp_files()
+
+    args = list(request.form.items())
+    playlist_db_id = args[0][0]
+
+    playlist = Playlist.query.get(playlist_db_id)
+
+    pdf_path = build_songbook(playlist)
+    path = os.path.join(*pdf_path.split("/")[1:])
+    return send_file(path, as_attachment=True)
+
+
+def build_songbook(playlist):
+    from app.songs.routes import get_user_path
+    path = get_user_path("")
+
+    if not os.path.exists("app/static"):
+        os.mkdir("app/static")
+    if not os.path.exists("app/static/tmp"):
+        os.mkdir("app/static/tmp")
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    from app.music.builder import build_songbook as build_songbook_pdf
+    return build_songbook_pdf(playlist, current_user, path)

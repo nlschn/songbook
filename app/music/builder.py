@@ -1,10 +1,13 @@
+import os
 import re
 import shutil
+import subprocess
 from pylatex import Document, Command, Center, LineBreak, Package
+from pylatex.position import VerticalSpace
 from pylatex.base_classes import Environment
-from pylatex.base_classes.command import CommandBase
+from pylatex.base_classes.command import CommandBase, Arguments
 from pylatex.basic import NewLine
-from pylatex.utils import NoEscape, bold
+from pylatex.utils import NoEscape, bold, italic
 from PyPDF2 import PdfFileReader
 from pdf2image import convert_from_path
 
@@ -13,6 +16,7 @@ REGEX_BRACKETS = r'\[.*?\]'
 REGEX_PARS = r"\[.*?\]"
 
 print_msg = False
+
 
 def msg(s):
     if print_msg: print(s)
@@ -90,18 +94,18 @@ def save_images(file_name, pdf_name):
     return paths
 
 def build_song_one_page(title, artist, release, year, pars, captions, path):
-    file_name = f"{path}/{title}_{artist}_{year}"#os.path.join(path, f"{title}_{artist}_{year}")
-    pdf_name = f"{path}/{title}_{artist}_{year}.pdf"#os.path.join(path, f"{title}_{artist}_{year}.pdf")
+    file_name = f"{path}/{title}_{artist}_{year}"
+    pdf_name = f"{path}/{title}_{artist}_{year}.pdf"
 
     # Copy font file to the tex path
-    shutil.copy("CutiveMono-Regular.ttf", path)
+    shutil.copy("app/static/fonts/CutiveMono-Regular.ttf", path)
 
     # Build first time with normal size.
     msg("Creating LaTeX document...")
     doc = create_doc(title, artist, release, year, "normal")
     build_lyrics(captions, pars, doc)
     msg("Building LaTeX document...")
-    doc.generate_pdf(file_name, silent = True, clean=False,compiler='lualatex')
+    doc.generate_pdf(file_name, silent = True, clean = True, compiler='lualatex')
 
     with open(pdf_name,'rb') as pdf:
         pages = PdfFileReader(pdf).getNumPages()
@@ -117,7 +121,7 @@ def build_song_one_page(title, artist, release, year, pars, captions, path):
     doc = create_doc(title, artist, release, year, "small")
     build_lyrics(captions, pars, doc)
     msg("Building LaTeX document...")
-    doc.generate_pdf(file_name, silent = True, clean=False,compiler='lualatex')
+    doc.generate_pdf(file_name, silent = True, clean = True, compiler='lualatex')
 
     img_paths = save_images(file_name, pdf_name)
 
@@ -125,8 +129,8 @@ def build_song_one_page(title, artist, release, year, pars, captions, path):
 
     return pdf_name, img_paths
 
-def build_tex(content, title, artist, release, year, path):
-    content = sanitize_input(content)   
+def build_tex(song, path):
+    content = sanitize_input(song.lyrics)   
     captions = replace_brackets(content)
     pars = set_listings(content) 
 
@@ -136,7 +140,120 @@ def build_tex(content, title, artist, release, year, path):
         print(len(pars))
         return None, None
 
-    return build_song_one_page(title, artist, release, year, pars, captions, path)  
+    return build_song_one_page(song.title, song.artist, song.release, song.year, pars, captions, path)  
      
 
+class IncludePDFCommand(CommandBase):
+    _latex_name = "includegraphics"
+    packages = [Package('graphicx')]
 
+class TextWidthCommand(CommandBase):
+    _latex_name = "textwidth"
+    packages = []
+
+class PageBreakCommand(CommandBase):
+    _latex_name = "pagebreak"    
+
+class PageStyleCommand(CommandBase):
+    _latex_name = "pagestyle"  
+    packages = [Package('fancyhdr')]
+
+class FooterCommand(CommandBase):
+    _latex_name = "fancyfoot"  
+    packages = [Package('fancyhdr')]
+
+class HeaderCommand(CommandBase):
+    _latex_name = "fancyhead"  
+    packages = [Package('fancyhdr')]
+
+class HyperlinkCommand(CommandBase):
+    packages = [Package('hyperref')]
+    _latex_name = ","
+
+
+def build_songbook(playlist, user, path):
+    # shutil.copy("app/static/fonts/TwCen-Regular.TTF", "./")
+
+    msg("Create tex document...")
+
+    geometry = {"left" : "2cm", "right" : "2cm", "top" : "2cm", "bottom" : "2cm"}
+    doc = Document(indent=False, geometry_options=geometry, documentclass = "article")
+    doc.packages.append(Package(NoEscape("fix-cm")))
+
+    # doc.append(NoEscape("\\newfontfamily{\\twcen}{[TwCen-Regular.TTF]}"))
+
+    doc.append(HyperlinkCommand())
+    doc.append(NoEscape("""\hypersetup{
+colorlinks,
+citecolor=black,
+filecolor=black,
+linkcolor=black,
+urlcolor=black
+}"""))
+    doc.append(NoEscape("\\newcommand\\invisiblesection[1]{\\refstepcounter{section}\\addcontentsline{toc}{section}{#1}\\markboth{#1}{#1}}"))
+    
+    # Title page
+    doc.append(NoEscape("\\thispagestyle{empty}")) 
+    doc.append(VerticalSpace("15em"))
+    with(doc.create(Center())):
+        doc.append(IncludePDFCommand(options=f"width=15cm", arguments=Arguments("../../logo/logoheaderdark")))
+        doc.append(NewLine())
+        # doc.append(NoEscape("{\\twcen"))
+        doc.append(NoEscape("{\\fontsize{30}{36}\selectfont"))
+        doc.append(f"by {user.prename} {user.surname}")
+        doc.append(NoEscape("}"))
+        # doc.append(NoEscape("}"))
+    doc.append(PageBreakCommand())
+   
+    doc.append(NoEscape("\\tableofcontents"))     
+    doc.append(NoEscape("\\newgeometry{margin=0.1cm}"))
+    doc.append(NoEscape("\\setcounter{page}{1}"))
+    
+    p = 1
+    count = 1
+    for i in range(len(playlist.songs)):
+        song = playlist.songs[i]
+
+        # First, build the pdf
+        pdf_path, _ = build_tex(song, path)
+
+        doc.append(NoEscape("\\invisiblesection{"))
+        doc.append(song.title)
+        doc.append(NoEscape("\\textnormal{~"))
+        if song.artist != "" and song.artist != None:
+            doc.append(" - " + song.artist)
+        doc.append(NoEscape("}}"))
+
+        with open(pdf_path,'rb') as pdf:
+            pages = PdfFileReader(pdf).getNumPages()
+        
+        for page in range(1, pages + 1):
+            with(doc.create(Center())):
+                doc.append(VerticalSpace(NoEscape("-1em")))            
+                doc.append(NoEscape(f"\includegraphics[scale=0.9, page={page}] " + "{" + f"{song.title}_{song.artist}_{song.year}" + "}"))
+                doc.append(NewLine())
+                doc.append(NoEscape(f"{p} - " + italic(f"{page}/{pages}")))
+                p += 1
+
+        doc.append(PageBreakCommand())
+        count += 1
+
+    msg("Build pdf document...")
+    result_path = f"{path}/{playlist.name}_songbook"
+    doc.generate_tex(result_path)
+    doc.generate_pdf(result_path, silent = True, clean = True)
+
+    # does not work
+    # with open(f"{result_path}.tex", 'r+') as f:
+    #     content = f.read()
+    #     f.seek(0, 0)
+    #     f.write('\\nonstopmode\n' + content)
+
+    # subprocess.run(["latexmk", "-pdf", f"{result_path}.tex", f"-jobname={result_path}"])
+    # subprocess.run(["latexmk", "-c"])
+
+    # os.remove("./TwCen-Regular.TTF")
+
+
+    # doc.generate_pdf(result_path, silent = True, clean = False)
+    return f"{result_path}.pdf"
