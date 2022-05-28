@@ -22,6 +22,7 @@
                             <tr>                        
                                 <th>Name</th>
                                 <th>Songs</th>
+                                <th>Share link</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -30,9 +31,48 @@
                             <tr>
                                 <td>{{ playlist.name }}</td>
                                 <td>{{ playlist_preview[playlist.id] }}</td>
+                                <td>
+                                    {% if playlist.share %}
+                                        <div class="field has-addons"> 
+                                            <button class="button" name="{{playlist.id}}" onclick="copy_to_clipboard('{{ playlist.share_link }}')">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-copy"></i>
+                                                </span>
+                                            </button>
+
+                                            <script>
+                                                function copy_to_clipboard(l) {
+                                                    var url = '{{ url_for("playlists.shared",  _external=True, link = "") }}' + l                                                    
+                                                    navigator.clipboard.writeText(url);
+                                                }
+                                            </script>
+                                            &nbsp
+                                            {{ playlist.share_link }}
+                                        </div>
+                                    {% else %}
+                                        private
+                                    {% endif %}
+                                </td>
                                 
                                 <td>
                                     <div class="field has-addons">
+                                        <form name="form" action="publish" method="POST">
+                                            {% if playlist.share %}
+                                                <button class="button is-info" name="{{playlist.id}}">
+                                                    <span class="icon is-small">
+                                                        <i class="fas fa-bullhorn"></i>
+                                                    </span>
+                                                </button>
+                                            {% else %}
+                                                <button class="button is-success" name="{{playlist.id}}">
+                                                    <span class="icon is-small">
+                                                        <i class="fas fa-bullhorn"></i>
+                                                    </span>
+                                                </button>
+                                            {% endif %}
+                                        </form>
+
+                                        &nbsp
                                         <form name="form" action="download" method="POST">
                                             <button class="button" name="{{playlist.id}}">
                                                 <span class="icon is-small">

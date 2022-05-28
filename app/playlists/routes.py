@@ -1,13 +1,14 @@
+from datetime import datetime
 from app import db
 from app.models import Playlist, Song
 from app.playlists import bp
-from app.playlists.forms import AddSongToPlaylistForm, NewPlaylistForm
+from app.playlists.forms import AddSongToPlaylistForm, NewPlaylistForm, OpenSharedPlaylistForm
 
 from flask import render_template, flash, redirect, url_for, request, session, send_file
 from flask_login import current_user, login_required
-from datetime import datetime
 
 import os
+import uuid
 
 @bp.route("/playlists", methods = ["GET", "POST"])
 @login_required
@@ -81,6 +82,10 @@ def edit():
         playlist_db_id = session["current_playlist_db_id"]
 
     playlist = Playlist.query.get(playlist_db_id)
+    if playlist == None:
+        flash("Invalid operation.")
+        return redirect(url_for("playlists.playlists"))
+    
     songs = playlist.songs
     collection = current_user.songs.all()
     collection_by_id = {f'{x.id}' : x.to_dict() for x in collection}
@@ -147,7 +152,27 @@ def remove():
     return redirect(url_for("playlists.edit"))
 
 
+@bp.route('/publish', methods = ["POST"])
+@login_required
+def publish():
+    args = list(request.form.items())    
+    playlist_db_id = args[0][0]   
+    playlist = Playlist.query.get(playlist_db_id)
+
+    if playlist.share:
+        playlist.share_link = None
+        playlist.share = False
+    else:
+        playlist.share_link = str(uuid.uuid4().hex)
+        playlist.share = True
+
+    db.session.commit()
+    
+    return redirect(url_for("playlists.playlists"))
+
+
 @bp.route('/download', methods = ["POST"])
+@login_required
 def download():
     from app.songs.routes import delete_user_temp_files
     delete_user_temp_files()
@@ -160,6 +185,97 @@ def download():
     pdf_path = build_songbook(playlist)
     path = os.path.join(*pdf_path.split("/")[1:])
     return send_file(path, as_attachment=True)
+
+
+@bp.route('/shared/<link>', methods = ["GET", "POST"])
+def shared(link):   
+    playlist = Playlist.query.where(Playlist.share_link == link).first()   
+
+    if playlist == None or not playlist.share:
+        form = OpenSharedPlaylistForm()
+        flash("This link does not belong to a public playlist.")
+        return redirect(url_for(
+            "playlists.shared_without_args", form = form))
+
+    session["view_playlist"] = playlist.id
+
+    return redirect(url_for("playlists.view_playlist"), code=307)
+
+
+@bp.route('/open', methods = ["GET", "POST"])
+def shared_without_args():
+    form = OpenSharedPlaylistForm()
+
+    if form.validate_on_submit():
+        link = form.id.data.replace(" ", "")
+        return shared(link)
+
+    return render_template(
+        "playlists/enter_link.html",
+        form = form)
+
+
+@bp.route('/view_playlist', methods = ["GET", "POST"])
+def view_playlist():
+    playlist = Playlist.query.get(int(session["view_playlist"]))
+    if playlist == None:
+        form = OpenSharedPlaylistForm()
+        flash("Invalid operation")
+        return redirect(url_for(
+            "playlists.shared_without_args", form = form))
+
+    author = playlist.user
+    
+    args = list(request.form.items())
+    if len(args) > 0:
+        command = args[0][0]
+
+        if command == "AddSelectedToCollection":
+            checked_song_ids = list(map(lambda x : int(x[0]), filter(lambda y : y[1] == "on", args)))
+            
+            if len(checked_song_ids) > 0:
+                added_songs, already_known_songs = add_list_of_songs_to_collection(checked_song_ids)
+                flash(f"{len(added_songs)} new songs were added to your collection, {'1 was' if len(already_known_songs) == 1 else str(len(already_known_songs)) + ' were' } already present.")
+            else:
+                flash("Please select songs to add.")
+        elif command == "Songbook":
+            pdf_path = build_songbook(playlist)
+            path = os.path.join(*pdf_path.split("/")[1:])
+            return send_file(path, as_attachment=True)
+
+    return render_template(
+        "playlists/shared_playlist.html",
+        playlist = playlist,
+        author = author,
+        title = "Shared playlist",
+        subtitle = f'"{playlist.name}" by {author.username}',
+        songs = playlist.songs)
+
+
+def add_list_of_songs_to_collection(song_ids):
+    already_known_songs = []
+    added_songs = []
+
+    for song_id in song_ids:
+        song_to_add = Song.query.get(song_id)
+
+        already_known = False
+        for s in current_user.songs:
+            if s.equal(song_to_add):
+                already_known_songs.append(song_to_add)
+                already_known = True
+                break
+        if not already_known:
+            copy = Song.copy(song_to_add)
+            copy.added = datetime.now()
+            copy.last_changed = datetime.now()
+            
+            current_user.songs.append(copy)            
+            db.session.add(copy)
+            added_songs.add(copy)
+            
+    db.session.commit()
+    return added_songs, already_known_songs
 
 
 def build_songbook(playlist):

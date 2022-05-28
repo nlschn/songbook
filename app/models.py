@@ -34,6 +34,9 @@ class Playlist(db.Model):
     added = db.Column(db.DateTime, default = datetime.now)
     last_changed = db.Column(db.DateTime, default = datetime.now)
 
+    share = db.Column(db.Boolean, default = False)
+    share_link = db.Column(db.String(50), index = True)
+
     songs = db.relationship("Song", secondary = "song_playlist_association", back_populates = "playlists")
 
 class Song(db.Model):
@@ -77,6 +80,26 @@ class Song(db.Model):
             'playlists' : list(map(lambda p : p.id, self.playlists))
         }
 
+    def equal(self, other):
+        return (
+            self.title == other.title and
+            self.artist == other.artist and
+            self.release == other.release and
+            self.year == other.year)
+
+    def copy(other):
+        return Song(
+            mbid = other.mbid,
+            release_id = other.release_id,
+            cover_url = other.cover_url,
+            title = other.title,
+            artist = other.artist,
+            release = other.release,
+            year = other.year,
+            lyrics = other.lyrics,
+            notes = other.notes,
+            capo = other.capo
+        )
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)

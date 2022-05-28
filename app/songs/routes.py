@@ -135,10 +135,19 @@ def choose():
                            capo = session["capo"],
                            added = datetime.now(),
                            last_changed = datetime.now())
-            db.session.add(db_song)
-            db.session.commit()
 
-            flash(f"Successfully added song {song.title} by {song.artist} to your collection.")
+            already_in_collection = False
+            for s in current_user.songs:
+                if s.equal(db_song):
+                    flash("A song with this metadata is already in your collection.")
+                    already_in_collection = True
+                    break
+
+            if not already_in_collection:
+                db.session.add(db_song)
+                db.session.commit()
+                flash(f"Successfully added song {song.title} by {song.artist} to your collection.")
+
             return redirect(url_for("songs.collection"))
             
 
@@ -182,7 +191,17 @@ def edit():
         song.notes = form.notes.data
         song.capo = form.capo.data
         song.last_changed = datetime.now()
-        db.session.commit()
+
+        already_in_collection = False
+        for s in current_user.songs:
+            if s.equal(song) and s.id != song.id:
+                flash("A song with this metadata is already in your collection.")
+                already_in_collection = True
+                break
+        if already_in_collection:
+            flash("A song with this metadata is already in your collection.")
+        else:
+            db.session.commit()
         
         session["lyrics"] = form.lyrics.data
         pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)        

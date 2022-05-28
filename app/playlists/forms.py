@@ -10,3 +10,7 @@ class AddSongToPlaylistForm(FlaskForm):
     title = StringField('Title', validators=[Length(max = 100)])
     artist = StringField('Artist', validators=[Length(max = 100)])
     submit = SubmitField("Add selected songs")
+
+class OpenSharedPlaylistForm(FlaskForm):
+    id = StringField('Id', validators=[DataRequired(), Length(max = 50)])
+    submit = SubmitField("Search")

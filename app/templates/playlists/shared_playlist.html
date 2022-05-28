@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="section">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}  
+            {% for message in messages %}
+                <div class="notification is-danger">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}          
+    <form name="form" action="view_playlist" method="POST">
+        <section class="section">
+            <nav class="level">
+                <div class="level-item has-text-centered">
+                    <!-- <button class="button" onclick="select_all(); return false;">Select all</button>
+                    &nbsp
+                    <button class="button" onclick="deselect_all(); return false;">Deselect all</button>                
+                    &nbsp
+                    <p id="selected_count"></p>
+                    &nbsp
+                    &nbsp
+                    &nbsp
+                    <button class="button" name="AddSelectedToCollection">Add selected to your own collection</button>
+                    &nbsp -->
+                    <button class="button" name="Songbook">Songbook</button>
+                </div>
+            </nav>
+            {% if songs != [] %}
+            <table class="table is-fullwidth has-text-left is-hoverable">
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Cover</th>
+                        <th>Title</th>
+                        <th>Artist</th>
+                        <th>Release</th>
+                        <th>Year</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for song in songs %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" onclick="update_selected_count();" name="{{song.id}}">
+                        </td>
+                        <td>
+                            <img width="64" height="64" id="{{song.release_id}}" />
+                        </td>
+                        <td>{{ song.title }}</td>
+                        <td>{{ song.artist }}</td>
+                        <td>{{ song.release }}</td>
+                        <td>{{ song.year }}</td>
+                        <td>
+                            <div class="field has-addons">
+                                <form action="../songs/collection/download" method="POST">
+                                    <button class="button" name="{{song.id}}">
+                                        <span class="icon is-small">
+                                            <i class="fas fa-download"></i>
+                                        </span>
+                                    </button>
+                                </form> 
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+        
+                    <script>
+                        var imgs = document.getElementsByTagName("img");
+                        for (var i = 0; i < imgs.length; i++) {
+                            img = imgs[i];
+                            id = img.id;
+                            fetch('http://coverartarchive.org/release/' + id)
+                                .then(response => response.json())
+                                .then(data => {
+                                    for (var i = 0; i < data["images"].length; i++) {
+                                        image = data["images"][i]
+                                        if (image['types'].includes("Front")) {
+                                            url = image['thumbnails']['small']
+                                            if (url == null)
+                                                url = image['thumbnails']['250']
+                                            if (url == null)
+                                                url = image['thumbnails']['500']
+                                            if (url == null)
+                                                url = image['image']
+
+                                            id = url.split("/")[4]
+                                            document.getElementById(id).src = url;
+                                            break;
+                                        }
+                                    }
+                                })
+                                .catch(console.error);
+                        }                              
+                    </script>
+                </tbody>
+            </table>
+            {% else %}
+            <p class="subtitle">
+                There are no songs in your playlist.
+            </p>
+            {% endif %}
+        </section>
+    </form>
+</section>
+
+<script>    
+    function get_checkboxes() {
+        var checkboxes = [];
+
+        var inputs = document.getElementsByTagName("input");
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].type == "checkbox") {
+                checkboxes.push(inputs[i]);
+            }
+        }
+        return checkboxes;
+    }
+
+    function update_selected_count() {
+        var checkboxes = get_checkboxes();
+        var selected = 0;
+
+        for (var i = 0; i < checkboxes.length; ++i) {
+            if (checkboxes[i].checked)
+                selected++;
+        }
+
+        var selected_count = document.getElementById("selected_count");
+        selected_count.innerText = selected + " selected";
+    }
+
+    function deselect_all() {
+        var table = document.getElementsByTagName("table")[0];
+        var rows = table.rows;
+        var checkboxes = get_checkboxes();
+
+        for (var i = 1; i < rows.length; ++i) {
+            checkboxes[i - 1].checked = false;
+        }
+        update_selected_count();
+    }
+
+    function select_all() { 
+        var table = document.getElementsByTagName("table")[0];
+        var rows = table.rows;
+
+        var checkboxes = get_checkboxes();
+
+        for (var i = 1; i < rows.length; ++i) {               
+            checkboxes[i - 1].checked = true;
+        }
+        update_selected_count();
+    }
+
+    // First time when loading the page
+    update_selected_count();
+</script>
+
+{% endblock %}
