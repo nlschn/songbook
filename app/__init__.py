@@ -1,7 +1,7 @@
 # import logging / doesn't work on PythonAnywhere
 # from logging.handlers import SMTPHandler, RotatingFileHandler
 
-from flask import Flask, session
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -21,8 +21,8 @@ login.login_view = 'auth.signin'
 
 @login.user_loader
 def load_user(user_id):
-    import models
-    return models.User.get(user_id)
+    from app.models import User
+    return User.get(user_id)
     
 
 def create_app(config_class = Config):
