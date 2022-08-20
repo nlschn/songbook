@@ -8,7 +8,6 @@ from flask_login import LoginManager
 # from flask_kvsession import KVSessionExtension
 # from simplekv.memory.redisstore import RedisStore
 
-from flask.ext.session import Session
 # import redis
 
 from config import Config
@@ -34,8 +33,6 @@ def create_app(config_class = Config):
     # doesn't work on PythonAnywhere
     # store = RedisStore(redis.StrictRedis())
     # KVSessionExtension(store, app)
-
-    Session(app)
     
     db.init_app(app)
     migrate.init_app(app, db)
