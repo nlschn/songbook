@@ -21,6 +21,7 @@ from typing import Any, Type
 
 class SongPlaylistAssociationTable(db.Model):
     __tablename__ = "song_playlist_association"
+    __table_args__ = {'extend_existing': True}
 
     playlist_id = db.Column(db.Integer, db.ForeignKey("playlist.id"), primary_key = True)
     song_id = db.Column(db.Integer, db.ForeignKey("song.id"), primary_key = True)
