@@ -21,7 +21,7 @@ def index():
 
 @bp.route('/imprint')
 def index():
-    return render_template("imprint.html", centered = True)
+    return render_template("main/imprint.html", centered = True)
 
 
 @bp.route("/profile")
