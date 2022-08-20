@@ -19,10 +19,7 @@ login = LoginManager()
 login.login_view = 'auth.signin'
 
 
-@login.user_loader
-def load_user(user_id):
-    from app.models import User
-    return User.get(user_id)
+
     
 
 def create_app(config_class = Config):
