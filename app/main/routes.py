@@ -20,7 +20,7 @@ def index():
 
 
 @bp.route('/imprint')
-def index():
+def imprint():
     return render_template("main/imprint.html", centered = True)
 
 
