@@ -21,13 +21,14 @@ from typing import Any, Type
 
 class SongPlaylistAssociationTable(db.Model):
     __tablename__ = "song_playlist_association"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = {'extend_existing': True} # for PythonAnywhere
 
     playlist_id = db.Column(db.Integer, db.ForeignKey("playlist.id"), primary_key = True)
     song_id = db.Column(db.Integer, db.ForeignKey("song.id"), primary_key = True)
 
 
 class Playlist(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
@@ -41,6 +42,7 @@ class Playlist(db.Model):
     songs = db.relationship("Song", secondary = "song_playlist_association", back_populates = "playlists")
 
 class Song(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
@@ -103,6 +105,7 @@ class Song(db.Model):
         )
 
 class User(UserMixin, db.Model):
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     prename = db.Column(db.String(64), index=True, unique=True)
