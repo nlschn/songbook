@@ -5,7 +5,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-from app.models import User
+
 # from flask_kvsession import KVSessionExtension
 # from simplekv.memory.redisstore import RedisStore
 
@@ -22,6 +22,7 @@ login.login_view = 'auth.signin'
 
 @login.user_loader
 def load_user(id):
+    from app.models import User
     return User.query.get(int(id))
     
 
