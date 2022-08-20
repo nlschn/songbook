@@ -18,6 +18,12 @@ login = LoginManager()
 login.login_view = 'auth.signin'
 
 
+@login.user_loader
+def load_user(user_id):
+    import models
+    return models.User.get(user_id)
+    
+
 def create_app(config_class = Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
