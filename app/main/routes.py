@@ -19,6 +19,11 @@ def index():
     return render_template("index.html", centered = True)
 
 
+@bp.route('/imprint')
+def index():
+    return render_template("imprint.html", centered = True)
+
+
 @bp.route("/profile")
 @login_required
 def profile():
