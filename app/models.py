@@ -5,9 +5,7 @@ from hashlib import md5
 from datetime import datetime
 
 
-@login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
+
 
 # Import every class in env.py
 
