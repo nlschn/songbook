@@ -91,8 +91,24 @@ def choose():
             session["lyrics"] = form.lyrics.data
             session["notes"] = form.notes.data
             session["capo"] = form.capo.data            
-               
-            pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)
+            
+            song = Song(user_id = current_user.id,
+                           mbid = song.mbid,
+                           release_id = song.release_id,
+                           cover_url = form.cover_url.data,
+                           title = form.title.data,
+                           artist = form.artist.data,
+                           release = form.release.data,
+                           year = form.year.data,
+                           lyrics = session["lyrics"],
+                           notes = session["notes"],
+                           capo = session["capo"],
+                           added = datetime.now(),
+                           last_changed = datetime.now())
+
+            session["current_song"] = song
+
+            pdf_path, img_paths = build_song(song)
             if pdf_path == None or img_paths == None:
                 flash("Your input is malformatted.")
                 return render_template('songs/configure_song.html', 
@@ -135,7 +151,7 @@ def choose():
                            capo = session["capo"],
                            added = datetime.now(),
                            last_changed = datetime.now())
-
+        
             already_in_collection = False
             for s in current_user.songs:
                 if s.equal(db_song):
@@ -191,6 +207,7 @@ def edit():
         song.notes = form.notes.data
         song.capo = form.capo.data
         song.last_changed = datetime.now()
+        song.cover_url = form.cover_url.data
 
         already_in_collection = False
         for s in current_user.songs:
@@ -204,7 +221,7 @@ def edit():
             db.session.commit()
         
         session["lyrics"] = form.lyrics.data
-        pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)        
+        pdf_path, img_paths = build_song(song)        
 
         if pdf_path == None or img_paths == None:
             flash("Your input is malformatted.")
@@ -239,7 +256,7 @@ def edit():
 
     # if we call the page from the colletion page, show initial data
     session["lyrics"] = song.lyrics
-    pdf_path, img_paths = build_song(song.title, song.artist, song.release, song.year)
+    pdf_path, img_paths = build_song(song)
     if pdf_path == None or img_paths == None:
         flash("Somethin went wrong. Could not build lyrics.")
         return redirect(url_for("songs.collection"))

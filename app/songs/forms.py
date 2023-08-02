@@ -22,6 +22,7 @@ class LyricsForm(FlaskForm):
     capo = StringField('Capo', validators=[Length(max = 30)])
     notes = TextAreaField('Notes', validators=[Length(max = 1000)])
     lyrics = TextAreaField('Lyrics', validators=[DataRequired(), Length(max = 100000)])
+    cover_url = StringField('Cover', validators=[Length(max = 1000)])
 
     submit = SubmitField('Build')
     apply = SubmitField('Apply changes')

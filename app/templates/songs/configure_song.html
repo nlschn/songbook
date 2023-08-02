@@ -15,7 +15,7 @@
     <section class="section">
         <div class="columns">
             <div class="column is-4">
-                <img src="{{song.cover_url}}" />
+                <img id="cover" src="{{song.cover_url}}" />                
             </div>
             <div class="column is-5"> 
                 <p class="subtitle">Song info</p>
@@ -45,6 +45,13 @@
                     <b>Year</b>
                     <p>{{ form.year(class = "input", value = song.year) }}</p>
                     {% for error in form.year.errors %}
+                        <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                    <br>
+
+                    <b>Cover Url</b>
+                    <p>{{ form.cover_url(class = "input", value = song.cover_url, id = "url_field") }}</p>
+                    {% for error in form.cover_url.errors %}
                         <span style="color: red;">{{ error }}</span>
                     {% endfor %}
                     <br>
@@ -107,5 +114,16 @@
             <div class="column">
             </div>
         </div>
-    </section>  
+    </section>
+    
+<script>
+    var url_field = document.getElementById("url_field");
+    url_field.addEventListener("change", (event) => {reload_cover()});
+
+    function reload_cover() {
+        var cover = document.getElementById("cover");
+        var url_field = document.getElementById("url_field");
+        cover.src = url_field.value;
+    }
+</script>
 {% endblock %}

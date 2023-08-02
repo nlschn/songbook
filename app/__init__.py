@@ -6,10 +6,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 
-# from flask_kvsession import KVSessionExtension
-# from simplekv.memory.redisstore import RedisStore
+from flask_kvsession import KVSessionExtension
+from simplekv.memory.redisstore import RedisStore
 
-# import redis
+import redis
 
 from config import Config
 
@@ -32,8 +32,8 @@ def create_app(config_class = Config):
 
     # https://pythonhosted.org/Flask-KVSession/
     # doesn't work on PythonAnywhere
-    # store = RedisStore(redis.StrictRedis())
-    # KVSessionExtension(store, app)
+    store = RedisStore(redis.StrictRedis())
+    KVSessionExtension(store, app)
     
     db.init_app(app)
     migrate.init_app(app, db)
