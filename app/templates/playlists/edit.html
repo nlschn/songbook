@@ -1,103 +1,81 @@
 {% extends "base.html" %}
 
 {% block content %}
-    
+
     <section class="section">
         <nav class="level">
             <div class="level-item has-text-centered">
-                <button class="button js-modal-trigger" data-target="modal-new-playlist" onclick="deselect_all(); get_checkboxes(); update_add_table_rows();">Add songs</button>
+                <button class="button js-modal-trigger" data-target="modal-new-playlist"
+                        onclick="deselect_all(); get_checkboxes(); update_add_table_rows();">Add songs
+                </button>
             </div>
-        </nav>        
+        </nav>
         {% if songs != [] %}
             <table class="table is-fullwidth has-text-left is-hoverable">
                 <thead>
-                    <tr>
-                        <th>Cover</th>
-                        <th>Title</th>
-                        <th>Artist</th>
-                        <th>Release</th>
-                        <th>Year</th>
-                        <th>Actions</th>
-                    </tr>
+                <tr>
+                    <th>Cover</th>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Release</th>
+                    <th>Year</th>
+                    <th>Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {% for song in songs %}
-                        <tr>
-                            <td>                                    
-                                <img width="64" height="64" id="{{song.release_id}}"/>                                   
-                            </td>
-                            <td>{{ song.title }}</td>
-                            <td>{{ song.artist }}</td>
-                            <td>{{ song.release }}</td>
-                            <td>{{ song.year }}</td>
-                            <td>
-                                <div class="field has-addons">
-                                    <form action="../songs/collection/download" method="POST">
-                                        <button class="button" name="{{song.id}}">
+                {% for song in songs %}
+                    <tr>
+                        <td>
+                            <img width="64" height="64" src="{{ song.cover_url }}"/>
+                        </td>
+                        <td>{{ song.title }}</td>
+                        <td>{{ song.artist }}</td>
+                        <td>{{ song.release }}</td>
+                        <td>{{ song.year }}</td>
+                        <td>
+                            <div class="field has-addons">
+                                <form action="../songs/collection/download" method="POST">
+                                    <button class="button" name="{{ song.id }}">
                                             <span class="icon is-small">
                                                 <i class="fas fa-download"></i>
                                             </span>
-                                        </button>
-                                    </form>
-                                    &nbsp
-                                    <form action="../songs/collection/edit" method="POST">
-                                        <button class="button" name="{{song.id}}">
+                                    </button>
+                                </form>
+                                &nbsp
+                                <form action="../songs/collection/edit" method="POST">
+                                    <button class="button" name="{{ song.id }}">
                                             <span class="icon is-small">
                                                 <i class="fas fa-edit"></i>
                                             </span>
-                                        </button>
-                                    </form>
-                                    &nbsp
-                                    <form action="remove" method="POST">                                        
-                                        <button class="button is-danger" name="{{song.id}}">
+                                    </button>
+                                </form>
+                                &nbsp
+                                <form action="remove" method="POST">
+                                    <button class="button is-danger" name="{{ song.id }}">
                                             <span class="icon is-small">
                                                 <i class="fas fa-times"></i>
                                             </span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-
-                    <script>
-                        var imgs = document.getElementsByTagName("img");
-                        for (var i = 0; i < imgs.length; i++) {
-                            img = imgs[i];
-                            id = img.id;
-                            fetch('http://coverartarchive.org/release/' + id)
-                                .then(response => response.json())
-                                .then(data => {
-                                    for (var i = 0; i < data["images"].length; i++) {
-                                        image = data["images"][i]
-                                        if (image['types'].includes("Front")) {
-                                            url = image['thumbnails']['small']
-                                            if (url == null)
-                                                url = image['thumbnails']['250']
-                                            if (url == null)
-                                                url = image['thumbnails']['500']
-                                            if (url == null)
-                                                url = image['image']
-
-                                            id = url.split("/")[4]
-                                            document.getElementById(id).src = url;
-                                            break;
-                                        }
-                                    }
-                                })
-                            .catch(console.error);  
-                        }                              
-                    </script>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         {% else %}
             <p class="subtitle">
                 There are no songs in your playlist.
             </p>
-        {% endif %}        
-    </section>  
+        {% endif %}
+    </section>
 
-    <div id="modal-new-playlist" class="modal">        
+    <style>
+        .table-size-limit {
+            max-height: calc(75vh);
+        }
+    </style>
+    <div class="modal" id="modal-new-playlist">
         <div class="modal-background"></div>
         <div class="modal-card">
             <form action="" method="post">
@@ -105,57 +83,59 @@
                     <p class="modal-card-title">Add songs to playlist {{ playlist.name }}</p>
                     <!-- <button class="delete" aria-label="close"></button> -->
                 </header>
-                <section class="modal-card-body">  
+                <section class="modal-card-body table-size-limit">
                     <nav class="level">
                         <div class="level-item has-text-centered">
                             <div class="field has-addons">
                                 {{ form.hidden_tag() }}
-                                <p>{{ form.title(class = "input", type = "text", placeholder = "Title", id = "search_title", oninput = "update_add_table_rows()") }}</p>&nbsp
-                                <p>{{ form.artist(class = "input", type = "text", placeholder = "Artist", id = "search_artist", oninput = "update_add_table_rows()") }}</p>&nbsp
-                            </div>   
+                                <p>{{ form.title(class = "input", type = "text", placeholder = "Title", id = "search_title", oninput = "update_add_table_rows()") }}</p>
+                                &nbsp
+                                <p>{{ form.artist(class = "input", type = "text", placeholder = "Artist", id = "search_artist", oninput = "update_add_table_rows()") }}</p>
+                                &nbsp
+                            </div>
                         </div>
                     </nav>
                     <nav class="level">
                         <!-- Left side -->
-                        <div class="level-left">                            
-                            <div class="level-item">                                
-                                  
+                        <div class="level-left">
+                            <div class="level-item">
+
                             </div>
                             <div class="level-item">
-                               
+
                             </div>
                             <div class="level-item">
-                                
+
                             </div>
                         </div>
                     </nav>
-                  
-                    <!-- Table with results -->                    
+
+                    <!-- Table with results -->
                     <table class="table is-fullwidth has-text-left is-hoverable">
                         <thead>
-                            <tr>
-                                <th>Select</th>
-                                <th>Title</th>
-                                <th>Artist</th>
-                                <th>Release</th>
-                                <th>Year</th>
-                            </tr>
+                        <tr>
+                            <th>Select</th>
+                            <th>Title</th>
+                            <th>Artist</th>
+                            <th>Release</th>
+                            <th>Year</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% for song in collection %}
-                            <tr id="{{song.id}}">
+                        {% for song in collection %}
+                            <tr id="{{ song.id }}">
                                 <td>
-                                    <input type="checkbox" onclick="update_selected_count();" name="{{song.id}}">
+                                    <input type="checkbox" onclick="update_selected_count();" name="{{ song.id }}">
                                 </td>
                                 <td>{{ song.title }}</td>
                                 <td>{{ song.artist }}</td>
                                 <td>{{ song.release }}</td>
-                                <td>{{ song.year }}</td>                            
+                                <td>{{ song.year }}</td>
                             </tr>
-                            {% endfor %}                
+                        {% endfor %}
                         </tbody>
                     </table>
-                    
+
                 </section>
                 <footer class="modal-card-foot">
                     {{ form.submit(class = "button is-success") }}
@@ -187,12 +167,12 @@
                     var checkboxes = get_checkboxes();
                     var selected = 0;
 
-                    for (var i = 0; i < checkboxes.length; ++i) {                        
+                    for (var i = 0; i < checkboxes.length; ++i) {
                         if (checkboxes[i].checked)
-                            selected ++;
+                            selected++;
                     }
 
-                    var selected_count = document.getElementById("selected_count");                    
+                    var selected_count = document.getElementById("selected_count");
                     selected_count.innerText = selected + " selected";
                 }
 
@@ -219,12 +199,12 @@
                     var rows = table.rows;
 
                     var checkboxes = get_checkboxes();
-                   
+
                     for (var i = 1; i < rows.length; ++i) {
                         var c = checkboxes[i - 1];
-                        var r = rows[i]                       
-                       
-                        if (is_row_visible(i)) 
+                        var r = rows[i]
+
+                        if (is_row_visible(i))
                             c.checked = true;
                         else
                             c.checked = false;
@@ -232,10 +212,10 @@
                     update_selected_count();
                 }
 
-                function is_row_visible(i) {        
+                function is_row_visible(i) {
                     var input_title = document.getElementById("search_title")["value"].toLowerCase();
                     var input_artist = document.getElementById("search_artist")["value"].toLowerCase();
-                    
+
                     if (document.getElementsByTagName("table").length < 2)
                         var table = document.getElementsByTagName("table")[0];
                     else
@@ -252,15 +232,12 @@
                     var artist = song.artist.toLowerCase();
 
                     if (input_title != '' && input_artist != '') {
-                         return title.includes(input_title) && artist.includes(input_artist);
-                    }
-                    else if (input_title != '' && input_artist == '') {
+                        return title.includes(input_title) && artist.includes(input_artist);
+                    } else if (input_title != '' && input_artist == '') {
                         return title.includes(input_title);
-                    }
-                    else if (input_title == '' && input_artist != '') {
-                        return artist.includes(input_artist);                        
-                    }
-                    else if (input_title == '' && input_artist == '') {
+                    } else if (input_title == '' && input_artist != '') {
+                        return artist.includes(input_artist);
+                    } else if (input_title == '' && input_artist == '') {
                         return true;
                     }
                     return true;
@@ -269,7 +246,7 @@
                 function update_add_table_rows() {
                     if ('{{ collection_by_id }}' == '')
                         return;
-                    
+
                     var input_title = document.getElementById("search_title")["value"].toLowerCase();
                     var input_artist = document.getElementById("search_artist")["value"].toLowerCase();
 
@@ -286,8 +263,7 @@
                         if (is_row_visible(i)) {
                             row.style.display = '';
                             count++;
-                        }
-                        else {
+                        } else {
                             row.style.display = 'none';
                         }
                     }
@@ -302,7 +278,7 @@
                     else
                         result_count.innerText = count + " results";
                 }
-            </script>            
+            </script>
         </div>
     </div>
 {% endblock %}

@@ -5,6 +5,7 @@ from wtforms.validators import DataRequired, Length, ValidationError
 class SongSearchForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     artist = StringField('Artist', validators=[])
+    release = StringField('Release', validators=[])
     submit = SubmitField('Search')
 
 class LyricsForm(FlaskForm):

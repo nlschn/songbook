@@ -16,20 +16,20 @@
         {% if songs != [] %}
             <table class="table is-fullwidth has-text-left is-hoverable">
                 <thead>
-                    <tr>
-                        <th>Cover</th>
-                        <th>Title</th>
-                        <th>Artist</th>
-                        <th>Release</th>
-                        <th>Year</th>
-                        <th>Actions</th>
-                    </tr>
+                <tr>
+                    <th>Cover</th>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Release</th>
+                    <th>Year</th>
+                    <th>Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {% for song in songs %}
+                {% for song in songs %}
                     <tr>
                         <td>
-                            <img width="64" height="64" id="{{song.release_id}}" />
+                            <img width="64" height="64" src="{{ song.cover_url }}"/>
                         </td>
                         <td>{{ song.title }}</td>
                         <td>{{ song.artist }}</td>
@@ -38,15 +38,15 @@
                         <td>
                             <div class="field has-addons">
                                 <form action="collection/download" method="POST">
-                                    <button class="button" name="{{song.id}}">
+                                    <button class="button" name="{{ song.id }}">
                                         <span class="icon is-small">
                                             <i class="fas fa-download"></i>
                                         </span>
                                     </button>
-                                </form>  
+                                </form>
                                 &nbsp
                                 <form action="collection/edit" method="POST">
-                                    <button class="button" name="{{song.id}}">
+                                    <button class="button" name="{{ song.id }}">
                                         <span class="icon is-small">
                                             <i class="fas fa-edit"></i>
                                         </span>
@@ -54,7 +54,7 @@
                                 </form>
                                 &nbsp
                                 <form action="collection/delete" method="POST">
-                                    <button class="button is-danger" name="{{song.id}}">
+                                    <button class="button is-danger" name="{{ song.id }}">
                                         <span class="icon is-small">
                                             <i class="fas fa-trash"></i>
                                         </span>
@@ -63,39 +63,7 @@
                             </div>
                         </td>
                     </tr>
-                    {% endfor %}
-        
-                    <script>
-                        var imgs = document.getElementsByTagName("img");
-                        for (var i = 0; i < imgs.length; i++) {
-                            img = imgs[i];
-                            id = img.id;
-                            console.log(id);
-                            fetch('http://coverartarchive.org/release/' + id)
-                                .then(response => response.json())
-                                .then(data => {
-                                    for (var i = 0; i < data["images"].length; i++) {
-                                        image = data["images"][i]
-                                        if (image['types'].includes("Front")) {
-                                            url = image['thumbnails']['small']
-                                            if (url == null)
-                                                url = image['thumbnails']['250']
-                                            if (url == null)
-                                                url = image['thumbnails']['500']
-                                            if (url == null)
-                                                url = image['image']
-
-                                            id = url.split("/")[4]
-                                            console.log(id)
-                                            document.getElementById(id).src = url;
-                                            break;
-                                        }
-                                    }
-                                })
-                                .catch(console.error);
-                            console.log(id);
-                        }                              
-                    </script>
+                {% endfor %}
                 </tbody>
             </table>
         {% else %}
@@ -103,5 +71,5 @@
                 There are no songs in your collection.
             </p>
         {% endif %}
-    </section> 
+    </section>
 {% endblock %}

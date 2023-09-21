@@ -28,14 +28,14 @@ def playlists():
         flash(f'Playlist "{playlist.name}" successfully created.')
 
     playlists = current_user.playlists.all()
-    lengths =  {p.name : len(p.songs) for p in playlists}
+    lengths = {p.name : len(p.songs) for p in playlists}
 
     # Calculate preview string
-    max_length = 200
+    max_length = 40
     playlist_preview = {}
-    j = 0
 
     for p in playlists:
+        j = 0
         if len(p.songs) == 0: 
             preview = "0"
         else:

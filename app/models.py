@@ -5,8 +5,6 @@ from hashlib import md5
 from datetime import datetime
 
 
-
-
 # Import every class in env.py
 
 # In order to update database:
@@ -16,8 +14,8 @@ from datetime import datetime
 class SongPlaylistAssociationTable(db.Model):
     __tablename__ = "song_playlist_association"
 
-    playlist_id = db.Column(db.Integer, db.ForeignKey("playlist.id"), primary_key = True)
-    song_id = db.Column(db.Integer, db.ForeignKey("song.id"), primary_key = True)
+    playlist_id = db.Column(db.Integer, db.ForeignKey("playlist.id"), primary_key=True)
+    song_id = db.Column(db.Integer, db.ForeignKey("song.id"), primary_key=True)
 
 
 class Playlist(db.Model):
@@ -25,75 +23,74 @@ class Playlist(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     name = db.Column(db.String(100), index=True)
-    added = db.Column(db.DateTime, default = datetime.now)
-    last_changed = db.Column(db.DateTime, default = datetime.now)
+    added = db.Column(db.DateTime, default=datetime.now)
+    last_changed = db.Column(db.DateTime, default=datetime.now)
 
-    share = db.Column(db.Boolean, default = False)
-    share_link = db.Column(db.String(50), index = True)
+    share = db.Column(db.Boolean, default=False)
+    share_link = db.Column(db.String(50), index=True)
 
-    songs = db.relationship("Song", secondary = "song_playlist_association", back_populates = "playlists")
+    songs = db.relationship("Song", secondary="song_playlist_association", back_populates="playlists")
+
 
 class Song(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     mbid = db.Column(db.String(200), index=True)
-    release_id = db.Column(db.String(500), index=True)
     cover_url = db.Column(db.String(1000))
 
     title = db.Column(db.String(300), index=True)
     artist = db.Column(db.String(300), index=True)
     release = db.Column(db.String(300), index=True)
     year = db.Column(db.Integer, index=True)
-    
+
     lyrics = db.Column(db.String(1000000), index=True)
     notes = db.Column(db.String(500), index=True)
     capo = db.Column(db.String(100), index=True)
 
-    added = db.Column(db.DateTime, default = datetime.now)
-    last_changed = db.Column(db.DateTime, default = datetime.now)
+    added = db.Column(db.DateTime, default=datetime.now)
+    last_changed = db.Column(db.DateTime, default=datetime.now)
 
-    playlists = db.relationship(Playlist, secondary = "song_playlist_association", back_populates = "songs")
+    playlists = db.relationship(Playlist, secondary="song_playlist_association", back_populates="songs")
 
     def to_dict(self):
         return {
-            'id' : self.id,
-            'user_id' : self.user_id,
-            'mbid' : self.mbid,
-            'release_id' : self.release_id,
-            'cover_url' : self.cover_url,
-            'title' : self.title,
-            'artist' : self.artist,
-            'release' : self.release,
-            'year' : self.year,
+            'id': self.id,
+            'user_id': self.user_id,
+            'mbid': self.mbid,
+            'cover_url': self.cover_url,
+            'title': self.title,
+            'artist': self.artist,
+            'release': self.release,
+            'year': self.year,
             # 'lyrics' : self.lyrics,
             # 'notes' : self.notes,
-            'capo' : self.capo,
-            'added' : str(self.added),
-            'last_changed' : str(self.last_changed),
-            'playlists' : list(map(lambda p : p.id, self.playlists))
+            'capo': self.capo,
+            'added': str(self.added),
+            'last_changed': str(self.last_changed),
+            'playlists': list(map(lambda p: p.id, self.playlists))
         }
 
     def equal(self, other):
         return (
-            self.title == other.title and
-            self.artist == other.artist and
-            self.release == other.release and
-            self.year == other.year)
+                self.title == other.title and
+                self.artist == other.artist and
+                self.release == other.release and
+                self.year == other.year)
 
     def copy(other):
         return Song(
-            mbid = other.mbid,
-            release_id = other.release_id,
-            cover_url = other.cover_url,
-            title = other.title,
-            artist = other.artist,
-            release = other.release,
-            year = other.year,
-            lyrics = other.lyrics,
-            notes = other.notes,
-            capo = other.capo
+            id=other.id,
+            cover_url=other.cover_url,
+            title=other.title,
+            artist=other.artist,
+            release=other.release,
+            year=other.year,
+            lyrics=other.lyrics,
+            notes=other.notes,
+            capo=other.capo
         )
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -102,8 +99,8 @@ class User(UserMixin, db.Model):
     surname = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    last_seen = db.Column(db.DateTime, default = datetime.now)
-    registered = db.Column(db.DateTime, default = datetime.now)
+    last_seen = db.Column(db.DateTime, default=datetime.now)
+    registered = db.Column(db.DateTime, default=datetime.now)
 
     songs = db.relationship('Song', backref='user', lazy='dynamic')
     playlists = db.relationship('Playlist', backref='user', lazy='dynamic')
@@ -121,4 +118,3 @@ class User(UserMixin, db.Model):
         digest = md5(self.email.lower().encode('utf-8')).hexdigest()
         return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
             digest, size)
-

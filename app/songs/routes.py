@@ -12,20 +12,21 @@ from flask_login import current_user, login_required
 from werkzeug.urls import url_parse
 from datetime import datetime
 
+
 @bp.route("/collection")
 @login_required
 def collection():
-    songs = current_user.songs.all()
+    songs = sorted(list(current_user.songs.all()), key=lambda x: x.title)
 
     return render_template(
-        'songs/collection.html', 
-        user = current_user, title = "Manage your collection", 
-        subtitle = "Songbook", 
-        view = "collection",
-        songs = songs)
+        'songs/collection.html',
+        user=current_user, title="Manage your collection",
+        subtitle="Songbook",
+        view="collection",
+        songs=songs)
 
 
-@bp.route("/add", methods = ["POST", "GET"])
+@bp.route("/add", methods=["POST", "GET"])
 @login_required
 def add():
     form = SongSearchForm()
@@ -33,125 +34,126 @@ def add():
     if form.is_submitted():
         song_title = form.title.data
         song_artist = form.artist.data
-        songs = mbapi.search(song_title, song_artist)
+        song_release = form.release.data
+        songs = mbapi.search(song_title, song_artist, song_release)
 
-        return render_template('songs/add.html', 
-            user = current_user, 
-            title = "Add a new song", 
-            subtitle = f'Results for "{song_title}" by "{song_artist}"', 
-            view = "add", 
-            form = form, 
-            songs = songs, 
-            song_title = song_title, 
-            song_artist = song_artist)
+        return render_template('songs/add.html',
+                               user=current_user,
+                               title="Add a new song",
+                               subtitle=f'Results for "{song_title}" by "{song_artist}"',
+                               view="add",
+                               form=form,
+                               songs=songs,
+                               song_title=song_title,
+                               song_artist=song_artist)
 
-    return render_template('songs/add.html', 
-        user = current_user, 
-        title = "Add a new song", 
-        subtitle = "Songbook", 
-        view = "add", 
-        form = form, 
-        songs = None, 
-        song_title = None, 
-        song_artist = None)
+    return render_template('songs/add.html',
+                           user=current_user,
+                           title="Add a new song",
+                           subtitle="Songbook",
+                           view="add",
+                           form=form,
+                           songs=None,
+                           song_title=None,
+                           song_artist=None)
 
-@bp.route("/choose", methods = ["POST"])
+
+@bp.route("/choose", methods=["POST"])
 @login_required
-def choose():    
+def choose():
     args = list(request.form.items())
 
     form = LyricsForm()
     form_add = LyricsFormAddToDb()
 
-    if len(args) == 1: # if the argument is a song, we came from the search page
+    if len(args) == 1:  # if the argument is a song, we came from the search page
         song_dict = ast.literal_eval(args[0][0])
-        song = mbapi.SongInfo(song_dict["mbid"], song_dict["release_id"], song_dict["title"], song_dict["artist"], song_dict["release"], song_dict["year"], mbapi.get_cover_url(song_dict["release_id"]))
-        
+        song = mbapi.SongInfo(song_dict["id"], song_dict["title"], song_dict["artist"], song_dict["release"],
+                              song_dict["year"], song_dict["cover_url"])
+
         delete_user_temp_files()
 
         session["current_song"] = song
 
-        return render_template('songs/configure_song.html', 
-            user = current_user, 
-            title = "Add a new song", 
-            subtitle = f"{song.title} by {song.artist}", 
-            view = "new",
-            song = song,
-            form = form,
-            form_add = form_add,
-            img_paths = None,
-            pdf_path = None,
-            pages = None,
-            pages_str = None)
+        return render_template('songs/configure_song.html',
+                               user=current_user,
+                               title="Add a new song",
+                               subtitle=f"{song.title} by {song.artist}",
+                               view="new",
+                               song=song,
+                               form=form,
+                               form_add=form_add,
+                               img_paths=None,
+                               pdf_path=None,
+                               pages=None,
+                               pages_str=None)
 
     else:
         song = session["current_song"]
-        
-        if form.validate_on_submit(): # we pressed the build button
+
+        if form.validate_on_submit():  # we pressed the build button
             session["lyrics"] = form.lyrics.data
             session["notes"] = form.notes.data
-            session["capo"] = form.capo.data            
-            
-            song = Song(user_id = current_user.id,
-                           mbid = song.mbid,
-                           release_id = song.release_id,
-                           cover_url = form.cover_url.data,
-                           title = form.title.data,
-                           artist = form.artist.data,
-                           release = form.release.data,
-                           year = form.year.data,
-                           lyrics = session["lyrics"],
-                           notes = session["notes"],
-                           capo = session["capo"],
-                           added = datetime.now(),
-                           last_changed = datetime.now())
+            session["capo"] = form.capo.data
+
+            song = Song(user_id=current_user.id,
+                        mbid=song.id,
+                        cover_url=form.cover_url.data,
+                        title=form.title.data,
+                        artist=form.artist.data,
+                        release=form.release.data,
+                        year=form.year.data,
+                        lyrics=session["lyrics"],
+                        notes=session["notes"],
+                        capo=session["capo"],
+                        added=datetime.now(),
+                        last_changed=datetime.now())
 
             session["current_song"] = song
 
             pdf_path, img_paths = build_song(song)
             if pdf_path == None or img_paths == None:
                 flash("Your input is malformatted.")
-                return render_template('songs/configure_song.html', 
-                    user = current_user, 
-                    title = "Add a new song", 
-                    subtitle = f"{song.title} by {song.artist}", 
-                    view = "new",
-                    song = song,
-                    form = form,
-                    form_add = form_add,
-                    img_paths = None,
-                    pdf_path = None,
-                    pages = None,
-                    pages_str = None)
+                return render_template('songs/configure_song.html',
+                                       user=current_user,
+                                       title="Add a new song",
+                                       subtitle=f"{song.title} by {song.artist}",
+                                       view="new",
+                                       song=song,
+                                       form=form,
+                                       form_add=form_add,
+                                       img_paths=None,
+                                       pdf_path=None,
+                                       pages=None,
+                                       pages_str=None)
 
-            return render_template('songs/configure_song.html', 
-                user = current_user, 
-                title = "Add a new song", 
-                subtitle = f"{song.title} by {song.artist}", 
-                view = "new",
-                song = song,
-                form = form,
-                form_add = form_add,
-                img_paths = img_paths,
-                pdf_path = pdf_path,
-                pages = len(img_paths),
-                pages_str = str(len(img_paths)))                
+            return render_template('songs/configure_song.html',
+                                   user=current_user,
+                                   title="Add a new song",
+                                   subtitle=f"{song.title} by {song.artist}",
+                                   view="new",
+                                   song=song,
+                                   form=form,
+                                   form_add=form_add,
+                                   img_paths=img_paths,
+                                   pdf_path=pdf_path,
+                                   pages=len(img_paths),
+                                   pages_str=str(len(img_paths)))
 
-        elif form_add.validate_on_submit(): # else we pressed the add to collection button            
-            db_song = Song(user_id = current_user.id,
-                           mbid = song.mbid,
-                           release_id = song.release_id,
-                           cover_url = song.cover_url,
-                           title = song.title,
-                           artist = song.artist,
-                           release = song.release,
-                           year = song.year,
-                           lyrics = session["lyrics"],
-                           notes = session["notes"],
-                           capo = session["capo"],
-                           added = datetime.now(),
-                           last_changed = datetime.now())
-        
+        elif form_add.validate_on_submit():  # else we pressed the add to collection button
+            db_song = Song(user_id=current_user.id,
+                           mbid=song.mbid,
+                           cover_url=song.cover_url,
+                           title=song.title,
+                           artist=song.artist,
+                           release=song.release,
+                           year=song.year,
+                           lyrics=session["lyrics"],
+                           notes=session["notes"],
+                           capo=session["capo"],
+                           added=datetime.now(),
+                           last_changed=datetime.now())
+
             already_in_collection = False
             for s in current_user.songs:
                 if s.equal(db_song):
@@ -165,23 +167,23 @@ def choose():
                 flash(f"Successfully added song {song.title} by {song.artist} to your collection.")
 
             return redirect(url_for("songs.collection"))
-            
 
         # We came here from the selection page
-        return render_template('songs/configure_song.html', 
-            user = current_user, 
-            title = "Add a new song", 
-            subtitle = f"{song.title} by {song.artist}", 
-            view = "new",
-            song = song,
-            form = form,
-            form_add = form_add,
-            img_paths = None,
-            pdf_path = None,
-            pages = None,
-            pages_str = None)
+        return render_template('songs/configure_song.html',
+                               user=current_user,
+                               title="Add a new song",
+                               subtitle=f"{song.title} by {song.artist}",
+                               view="new",
+                               song=song,
+                               form=form,
+                               form_add=form_add,
+                               img_paths=None,
+                               pdf_path=None,
+                               pages=None,
+                               pages_str=None)
 
-@bp.route('/collection/edit', methods = ["POST"])
+
+@bp.route('/collection/edit', methods=["POST"])
 def edit():
     # Load all data. If the page is called with one arg, take it as song id, else read it
     # from the session
@@ -189,17 +191,17 @@ def edit():
 
     args = list(request.form.items())
     if len(args) == 1:
-        song_db_id = args[0][0]   
+        song_db_id = args[0][0]
         session["current_song_db_id"] = song_db_id
     else:
         song_db_id = session["current_song_db_id"]
 
     song = Song.query.get(song_db_id)
-       
+
     form = LyricsForm()
     form_add = None
 
-    if form.validate_on_submit(): # we pressed the apply button
+    if form.validate_on_submit():  # we pressed the apply button
         song.title = form.title.data
         song.artist = form.artist.data
         song.release = form.release.data
@@ -219,40 +221,40 @@ def edit():
             flash("A song with this metadata is already in your collection.")
         else:
             db.session.commit()
-        
+
         session["lyrics"] = form.lyrics.data
-        pdf_path, img_paths = build_song(song)        
+        pdf_path, img_paths = build_song(song)
 
         if pdf_path == None or img_paths == None:
             flash("Your input is malformatted.")
-            return render_template('songs/configure_song.html', 
-                user = current_user, 
-                title = "Edit a song", 
-                subtitle = f"{song.title} by {song.artist}", 
-                view = "edit",
-                song = song,
-                form = form,
-                form_add = form_add,
-                img_paths = None,
-                pdf_path = None,
-                pages = None,
-                pages_str = None)        
+            return render_template('songs/configure_song.html',
+                                   user=current_user,
+                                   title="Edit a song",
+                                   subtitle=f"{song.title} by {song.artist}",
+                                   view="edit",
+                                   song=song,
+                                   form=form,
+                                   form_add=form_add,
+                                   img_paths=None,
+                                   pdf_path=None,
+                                   pages=None,
+                                   pages_str=None)
 
         song.lyrics = form.lyrics.data
         db.session.commit()
 
-        return render_template('songs/configure_song.html', 
-            user = current_user, 
-            title = "Edit a song", 
-            subtitle = f"{song.title} by {song.artist}", 
-            view = "edit",
-            song = song,
-            form = form,
-            form_add = form_add,
-            img_paths = img_paths,
-            pdf_path = pdf_path,
-            pages = len(img_paths),
-            pages_str = str(len(img_paths)))
+        return render_template('songs/configure_song.html',
+                               user=current_user,
+                               title="Edit a song",
+                               subtitle=f"{song.title} by {song.artist}",
+                               view="edit",
+                               song=song,
+                               form=form,
+                               form_add=form_add,
+                               img_paths=img_paths,
+                               pdf_path=pdf_path,
+                               pages=len(img_paths),
+                               pages_str=str(len(img_paths)))
 
     # if we call the page from the colletion page, show initial data
     session["lyrics"] = song.lyrics
@@ -260,27 +262,27 @@ def edit():
     if pdf_path == None or img_paths == None:
         flash("Somethin went wrong. Could not build lyrics.")
         return redirect(url_for("songs.collection"))
-    
+
     form.lyrics.data = song.lyrics
     form.capo.data = song.capo
     form.notes.data = song.notes
 
-    return render_template('songs/configure_song.html', 
-        user = current_user, 
-        title = "Edit a song", 
-        subtitle = f"{song.title} by {song.artist}", 
-        view = "edit",
-        song = song,
-        form = form,
-        form_add = form_add,
-        img_paths = img_paths,
-        pdf_path = pdf_path,
-        pages = len(img_paths),
-        pages_str = str(len(img_paths)),
-        current_song_db_id = song_db_id)
+    return render_template('songs/configure_song.html',
+                           user=current_user,
+                           title="Edit a song",
+                           subtitle=f"{song.title} by {song.artist}",
+                           view="edit",
+                           song=song,
+                           form=form,
+                           form_add=form_add,
+                           img_paths=img_paths,
+                           pdf_path=pdf_path,
+                           pages=len(img_paths),
+                           pages_str=str(len(img_paths)),
+                           current_song_db_id=song_db_id)
 
 
-@bp.route('/collection/download', methods = ["POST"])
+@bp.route('/collection/download', methods=["POST"])
 def download():
     delete_user_temp_files()
 
@@ -294,7 +296,7 @@ def download():
     return send_file(path, as_attachment=True)
 
 
-@bp.route('/collection/delete', methods = ["POST"])
+@bp.route('/collection/delete', methods=["POST"])
 def delete():
     delete_user_temp_files()
 
@@ -319,7 +321,7 @@ def build_song(song):
         os.mkdir("app/static/tmp")
     if not os.path.exists(path):
         os.mkdir(path)
-    
+
     return build_tex(song, path)
 
 
@@ -327,10 +329,11 @@ def delete_user_temp_files():
     try:
         path = get_user_path("")
         if os.path.exists(path):
-            for f in os.listdir(path):            
+            for f in os.listdir(path):
                 os.remove(os.path.join(path, f))
     except:
         print(f"ERROR Unable to delete user directory: {path}\nProbably latex was building...")
+
 
 def get_user_path(file):
     split = file.split(".")[:-1]
@@ -349,10 +352,8 @@ def get_user_file_name(filename):
     # info = ip
 
     if "userid" not in list(session.keys()):
-        session["userid"] = current_user.id #str(uuid.uuid4())
+        session["userid"] = current_user.id  # str(uuid.uuid4())
 
     info = session["userid"]
 
     return f"app/static/tmp/{filename}_{info}"
-
-
