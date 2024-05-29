@@ -119,6 +119,7 @@ class Document:
         self.document_class_options = []
         self.document_class = "article"
 
+        self.preamble = []
         self.children = []
 
     def set_document_class(self, document_class, options):
@@ -132,6 +133,9 @@ class Document:
         self.children.append(element)
         return element
     
+    def append_preamble(self, element):
+        self.preamble.append(element)
+    
     def build(self):
         document_class_str = f'[{", ".join(self.document_class_options)}]{{{self.document_class}}}'
         s = f"\\documentclass{document_class_str}\n\n"
@@ -139,6 +143,11 @@ class Document:
         for package in self.packages:
             s += f"\\usepackage[{', '.join(package.options)}]{{{package.name}}}\n"
 
+        s += "\n"
+
+        for preamble in self.preamble:
+            s += preamble.build(0)
+            
         s+= "\n"
 
         env_doc = Environment("document", children=self.children)

@@ -99,7 +99,7 @@ def choose():
             song.capo = form.capo.data
             song.notes = form.notes.data
             song.lyrics = form.lyrics.data
-            
+
             pdf_path, img_paths, pages, small_font = build_song(song)
 
             song = Song(user_id=current_user.id,
@@ -235,6 +235,8 @@ def edit():
             db.session.commit()
 
         session["lyrics"] = form.lyrics.data
+        song.lyrics = form.lyrics.data
+        
         pdf_path, img_paths, pages, small_font = build_song(song)
 
         if pdf_path == None or img_paths == None:
@@ -252,7 +254,7 @@ def edit():
                                    pages=None,
                                    pages_str=None)
 
-        song.lyrics = form.lyrics.data
+        
         song.num_pages = pages
         song.small_font = small_font
 

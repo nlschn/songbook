@@ -2,8 +2,10 @@ import os
 import re
 import shutil
 import subprocess
+import random
 from PyPDF2 import PdfReader
 from pdf2image import convert_from_path
+from PIL import Image
 
 from .latex import *
 
@@ -16,7 +18,11 @@ CODE_PAGE_BREAK = "pagebreak"
 CODE_TWO_COLUMNS = "twocolumns"
 CODE_COL_BREAK = "colbreak"
 
-print_msg = False
+SONGBOOK_COVER_SIZE = 64
+SONGBOOK_COVER_OFFSET_X = 50
+SONGBOOK_COVER_OFFSET_Y = 50
+
+print_msg = True
 
 
 def msg(s):
@@ -47,7 +53,7 @@ def remove_special_chars(content):
 
 def call_build_process(path, file):
     f = file.split("/")[-1]
-    p = subprocess.run(["latexmk", "-lualatex", "-interaction=nonstopmode", f], cwd=path)
+    p = subprocess.run(["latexmk", "-lualatex", "-interaction=batchmode", f], cwd=path)
     return p
 
 
@@ -79,20 +85,22 @@ def create_document(path, file_name, page_numbering=False):
     doc.use_package("parskip", [])
     doc.use_package("multicol", [])
     doc.use_package("hyperref", ["hidelinks"])
+    doc.use_package("tikz", [])
+    doc.use_package("contour", [])
+    doc.use_package("color", [])
 
     if not page_numbering:
         doc.use_package("nopageno", [])
 
-    doc.append(Command("setmainfont", 
+    doc.append_preamble(Command("setmainfont", 
                        options=["BoldFont={TwCen-Bold.ttf}", "ItalicFont={TwCen-Regular.ttf}", "BoldItalicFont={TwCen-Regular.ttf}"], 
                        arguments=["TwCen-Regular.ttf"]))
-    doc.append(Command("newfontfamily", 
+    doc.append_preamble(Command("newfontfamily", 
                        arguments=["\\cutive", "CutiveMono-Regular.ttf"]))
     
-    doc.append(Text("\\newcommand{\\invisiblesection}[1]{\\refstepcounter{section}\\addcontentsline{toc}{section}{#1}\\markboth{#1}{#1}}"))
+    doc.append_preamble(Text("\\newcommand{\\invisiblesection}[1]{\\refstepcounter{section}\\addcontentsline{toc}{section}{#1}\\markboth{#1}{#1}}"))
 
     return doc
-
 
 
 def build_song_header(song, doc):
@@ -200,8 +208,6 @@ def build_song(song, doc, small_font):
     doc.append(env_content)
 
 
-
-
 def build_song_standalone(song, path, file_name, small_font):
     doc = create_document(path, file_name)
 
@@ -246,8 +252,66 @@ def create_song(song, path):
 
 
 
+def build_cover_background(playlist, path):
+    imgs = []
+
+    for i in range(len(playlist.songs)):
+        img = Image.open(f"{path}/images/cover_{i:03d}.png")
+        img = img.resize((SONGBOOK_COVER_SIZE, SONGBOOK_COVER_SIZE))
+        imgs.append(img)
+
+    # create a new image with the size of an a4 paper
+    width, height = 595, 842
+    cover = Image.new("RGB", (width, height), (255, 255, 255))
+
+    # loop over the grid and paste the images
+    start_x = random.randint(-SONGBOOK_COVER_OFFSET_X, 0)
+    start_y = random.randint(-SONGBOOK_COVER_OFFSET_Y, 0)
+
+    for x in range(start_x, width, SONGBOOK_COVER_SIZE):
+        for y in range(start_y, height, SONGBOOK_COVER_SIZE):
+            cover.paste(imgs[random.randint(0, len(imgs) - 1)], (x, y))
+    
+    name = "cover_background.png"
+    file = f"{path}/{name}"
+    cover.save(file)
+    return name
+
+
 def build_songbook_cover(playlist, user, path, doc):
-     doc.append(Command("pagestyle", arguments=["empty"]))
+    background_file = build_cover_background(playlist, path)
+
+    doc.append(Command("pagestyle", arguments=["empty"]))
+
+    # background image   
+    doc.append(Text(f"\\tikz[remember picture,overlay] \\node[inner sep=0pt] at (current page.center) {{\\includegraphics[width=\\paperwidth]{{{background_file}}}}};"))
+
+    # title
+    songbook_title = sanitise_input(playlist.name)
+    songbook_author = sanitise_input(user.username)
+
+    doc.append(Command("vspace", arguments=["10cm"]))
+
+    env_center = Environment("center", [])    
+
+    braces_title = Braces()
+    braces_author = Braces()
+
+    braces_title.append(Command("fontsize", arguments=["80", "96"]))
+    braces_title.append(Command("selectfont"))
+    braces_title.append(Text(f"\\contour{{black}}{{\\protect\\color{{white}}{songbook_title}}}"))
+
+    braces_author.append(Command("fontsize", arguments=["40", "50"]))
+    braces_author.append(Command("selectfont"))
+    braces_author.append(Text(f"\\contour{{black}}{{\\protect\\color{{white}}{songbook_author}}}"))
+
+    env_center.append(braces_title)
+    env_center.append(NewLine())
+    env_center.append(braces_author)
+
+    doc.append(env_center)
+    doc.append(Command("newpage"))
+
 
 
 def build_songbook_toc(doc):   
@@ -292,11 +356,12 @@ def create_songbook(playlist, user, path):
     except:
         pass
 
-    # i = 0
-    # for song in playlist.songs:
-    #     if song.cover_url:
-    #         download_cover_image(song.cover_url, f"{path}/images/cover_{i:03d}.png")
-    #         i += 1
+    i = 0
+    for song in playlist.songs:
+        if song.cover_url:
+            download_cover_image(song.cover_url, f"{path}/images/cover_{i:03d}.png")
+            i += 1
+            msg(f"Downloaded cover image {i}/{len(playlist.songs)} for {song.title}")
 
     prepare_font_files(path)
     doc = build_songbook(playlist, user, path)
