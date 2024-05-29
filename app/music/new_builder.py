@@ -261,7 +261,7 @@ def build_cover_background(playlist, path):
         imgs.append(img)
 
     # create a new image with the size of an a4 paper
-    width, height = 595, 842
+    width, height = 595 * 2, 842 * 2
     cover = Image.new("RGB", (width, height), (255, 255, 255))
 
     # loop over the grid and paste the images
@@ -311,7 +311,6 @@ def build_songbook_cover(playlist, user, path, doc):
 
     doc.append(env_center)
     doc.append(Command("newpage"))
-
 
 
 def build_songbook_toc(doc):   
