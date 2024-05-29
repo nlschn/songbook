@@ -36,7 +36,7 @@ def download_cover_image(url, path):
 
 def sanitise_input(content):
     result = content
-    t = {"”": '"', "’": "'", "–": "-", "…": "...", "—": "-", "‘": "'"}
+    t = {"”": '"', "’": "'", "–": "-", "…": "...", "—": "-", "‘": "'", " ́": "'"} 
 
     for c in t:
         result = re.sub(c, t[c], result)

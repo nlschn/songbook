@@ -1,5 +1,5 @@
-activate.bat
-
+app.db
+app/static/tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
