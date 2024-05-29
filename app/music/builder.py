@@ -75,7 +75,7 @@ def create_doc(title, artist, release, year, size, capo=None):
     geometry = {"left": "2cm", "right": "2cm", "top": "1cm", "bottom": "1cm"}
 
     doc = Document(indent=False, geometry_options=geometry, documentclass="article")
-
+    
     doc.packages.append(Package("fontspec"))
     doc.packages.append(Package('nopageno'))
 

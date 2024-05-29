@@ -1,9 +1,10 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
-auth_manager = SpotifyClientCredentials()
+auth_manager = SpotifyClientCredentials(client_id="cf64b192c99b401bbe9c208a2c3a6699", client_secret="e4cef14a4b31421482fbfd91ad7b9294")
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
+IMAGE_INDEX = 1
 
 class SongInfo:
     def __init__(self, id, title, artist, release, year, cover_url):
@@ -13,8 +14,10 @@ class SongInfo:
         self.release = release
         self.year = year
         self.cover_url = cover_url
-
-
+        self.capo = None
+        self.lyrics = None
+        self.notes = None
+        
 def search(title, artist, release):
     artist = f"artist:{artist}" if artist else ""
     release = f"album:{release}" if release else ""
@@ -30,7 +33,7 @@ def search(title, artist, release):
 
         cover_url = None
         if track["album"]["images"]:
-            cover_url = track["album"]["images"][0]["url"]
+            cover_url = track["album"]["images"][IMAGE_INDEX]["url"]
 
         s = SongInfo(id, title, artist, album, year, cover_url)
         songs.append(s)

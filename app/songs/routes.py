@@ -2,7 +2,7 @@ from app import db
 from app.songs import bp
 from app.music import mbapi
 from app.songs.forms import LyricsForm, LyricsFormAddToDb, SongSearchForm
-from app.music.builder import build_tex
+from app.music.new_builder import create_song
 from app.models import Song
 
 import ast
@@ -95,6 +95,12 @@ def choose():
             session["lyrics"] = form.lyrics.data
             session["notes"] = form.notes.data
             session["capo"] = form.capo.data
+            
+            song.capo = form.capo.data
+            song.notes = form.notes.data
+            song.lyrics = form.lyrics.data
+            
+            pdf_path, img_paths, pages, small_font = build_song(song)
 
             song = Song(user_id=current_user.id,
                         mbid=song.id,
@@ -107,11 +113,12 @@ def choose():
                         notes=session["notes"],
                         capo=session["capo"],
                         added=datetime.now(),
-                        last_changed=datetime.now())
+                        last_changed=datetime.now(),
+                        num_pages = pages,
+                        small_font = small_font)
 
             session["current_song"] = song
 
-            pdf_path, img_paths = build_song(song)
             if pdf_path == None or img_paths == None:
                 flash("Your input is malformatted.")
                 return render_template('songs/configure_song.html',
@@ -152,7 +159,9 @@ def choose():
                            notes=session["notes"],
                            capo=session["capo"],
                            added=datetime.now(),
-                           last_changed=datetime.now())
+                           last_changed=datetime.now(),
+                           num_pages = song.num_pages,
+                           small_font = song.small_font)
 
             already_in_collection = False
             for s in current_user.songs:
@@ -210,6 +219,8 @@ def edit():
         song.capo = form.capo.data
         song.last_changed = datetime.now()
         song.cover_url = form.cover_url.data
+        song.num_pages = song.num_pages
+        song.small_font = song.small_font
 
         already_in_collection = False
         for s in current_user.songs:
@@ -217,13 +228,14 @@ def edit():
                 flash("A song with this metadata is already in your collection.")
                 already_in_collection = True
                 break
+
         if already_in_collection:
             flash("A song with this metadata is already in your collection.")
         else:
             db.session.commit()
 
         session["lyrics"] = form.lyrics.data
-        pdf_path, img_paths = build_song(song)
+        pdf_path, img_paths, pages, small_font = build_song(song)
 
         if pdf_path == None or img_paths == None:
             flash("Your input is malformatted.")
@@ -241,6 +253,9 @@ def edit():
                                    pages_str=None)
 
         song.lyrics = form.lyrics.data
+        song.num_pages = pages
+        song.small_font = small_font
+
         db.session.commit()
 
         return render_template('songs/configure_song.html',
@@ -258,7 +273,8 @@ def edit():
 
     # if we call the page from the colletion page, show initial data
     session["lyrics"] = song.lyrics
-    pdf_path, img_paths = build_song(song)
+    pdf_path, img_paths, pages, small_font = build_song(song)
+
     if pdf_path == None or img_paths == None:
         flash("Somethin went wrong. Could not build lyrics.")
         return redirect(url_for("songs.collection"))
@@ -291,7 +307,7 @@ def download():
 
     song = Song.query.get(song_db_id)
 
-    pdf_path, img_paths = build_song(song)
+    pdf_path, img_paths, pages, small_font = build_song(song)
     path = os.path.join(*pdf_path.split("/")[1:])
     return send_file(path, as_attachment=True)
 
@@ -322,7 +338,7 @@ def build_song(song):
     if not os.path.exists(path):
         os.mkdir(path)
 
-    return build_tex(song, path)
+    return create_song(song, path)
 
 
 def delete_user_temp_files():

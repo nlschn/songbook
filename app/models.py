@@ -52,6 +52,9 @@ class Song(db.Model):
     last_changed = db.Column(db.DateTime, default=datetime.now)
 
     playlists = db.relationship(Playlist, secondary="song_playlist_association", back_populates="songs")
+    
+    num_pages = db.Column(db.Integer)
+    small_font = db.Column(db.Boolean)
 
     def to_dict(self):
         return {

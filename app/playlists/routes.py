@@ -289,5 +289,5 @@ def build_songbook(playlist):
     if not os.path.exists(path):
         os.mkdir(path)
 
-    from app.music.builder import build_songbook as build_songbook_pdf
+    from app.music.new_builder import create_songbook as build_songbook_pdf
     return build_songbook_pdf(playlist, current_user, path)
