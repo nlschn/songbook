@@ -1,10 +1,22 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
-auth_manager = SpotifyClientCredentials(client_id="cf64b192c99b401bbe9c208a2c3a6699", client_secret="e4cef14a4b31421482fbfd91ad7b9294")
+
+def read_credentials():
+    with open("credentials.txt") as file:
+        lines = file.readlines()
+        client_id = lines[0].strip()
+        client_secret = lines[1].strip()
+        return client_id, client_secret
+    
+client_id, client_secret = read_credentials()
+
+auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
 IMAGE_INDEX = 1
+
+
 
 class SongInfo:
     def __init__(self, id, title, artist, release, year, cover_url):

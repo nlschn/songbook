@@ -74,7 +74,8 @@ def playlists():
 @login_required
 def edit():
     args = list(request.form.items())
-    
+    print(args)
+
     if len(args) == 1: # if we come from the playlists page
         playlist_db_id = args[0][0]
         session["current_playlist_db_id"] = playlist_db_id
@@ -107,6 +108,8 @@ def edit():
 
         songs = playlist.songs
 
+    songs_not_in_playlist = list(filter(lambda x : x not in songs, collection))
+
     # Show the default page
     return render_template(
         'playlists/edit.html', 
@@ -117,7 +120,8 @@ def edit():
         songs = songs,
         form = form,
         collection = collection,
-        collection_by_id = collection_by_id)
+        collection_by_id = collection_by_id,
+    )
 
 
 @bp.route('/delete', methods = ["POST"])
@@ -238,6 +242,7 @@ def view_playlist():
                 flash(f"{len(added_songs)} new songs were added to your collection, {'1 was' if len(already_known_songs) == 1 else str(len(already_known_songs)) + ' were' } already present.")
             else:
                 flash("Please select songs to add.")
+
         elif command == "Songbook":
             pdf_path = build_songbook(playlist)
             path = os.path.join(*pdf_path.split("/")[1:])
